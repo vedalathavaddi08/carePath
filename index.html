@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CarePath | Patient Journey Navigator</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header>
+  <div class="brand">✚ Care<span>Path</span></div>
+  <div class="header-right">
+    <span id="conflictHeaderPill" class="guard-pill conflict" onclick="go('data')" title="Inspect multi-source conflicts & stale record protection"></span>
+    <span id="privacyHeaderPill" class="guard-pill" onclick="go('privacy')" title="Inspect Local-Only Privacy Perimeter & Runtime Egress Firewall"></span>
+    <small class="muted">Administrative navigation • Not medical advice</small>
+    <button id="accountBtn" class="btn secondary small" onclick="accountAction()">Sign in</button>
+  </div>
+</header>
+<div class="shell">
+  <aside>
+    <div id="nav"></div>
+    <div class="perimeter-box">
+      <strong>🔒 Local-Only Privacy Guard</strong>
+      Restricted PII/PHI never leaves this device. Cloud AI &amp; external network calls are hard-blocked at runtime.
+    </div>
+  </aside>
+  <main id="app" class="fade"></main>
+</div>
+<div id="modalRoot"></div>
+<div id="toastRoot"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
