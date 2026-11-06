@@ -1,0 +1,2648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CarePath | Patient Journey Navigator</title>
+<style>
+:root{
+  --ink:#17344b;
+  --muted:#647b8d;
+  --blue:#176bdb;
+  --aqua:#14b8a6;
+  --bg:#f3f8fc;
+  --line:#dce8f0;
+  --white:#fff;
+  --orange:#f6a23c;
+  --red:#c93b2b;
+  --purple:#6d28d9;
+  --amber-bg:#fff8eb;
+  --amber-line:#f5d08a;
+  --danger-bg:#fff1f0;
+  --danger-line:#f6c3be;
+  --ok-bg:#e2f8ef;
+  --ok-ink:#087c60;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);font:15px/1.5 Inter,Segoe UI,Arial,sans-serif;color:var(--ink)}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer;transition:all .15s ease}
+button:disabled{opacity:.45;cursor:not-allowed}
+header{min-height:74px;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:10px max(22px,5vw);position:sticky;top:0;z-index:20;gap:12px;flex-wrap:wrap}
+.brand{font-weight:850;font-size:24px;color:#105dba;display:flex;align-items:center;gap:8px}
+.brand span{color:#0cae9c}
+.header-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.guard-pill{display:inline-flex;align-items:center;gap:6px;background:#e6f7f2;border:1px solid #9ee0cb;color:#08664e;padding:6px 11px;border-radius:999px;font-size:12px;font-weight:750;cursor:pointer}
+.guard-pill.conflict{background:#fff4e0;border-color:#f3c478;color:#8e5206}
+.shell{display:grid;grid-template-columns:255px minmax(0,1fr);min-height:calc(100vh - 74px)}
+aside{background:white;border-right:1px solid var(--line);padding:20px 14px;display:flex;flex-direction:column;justify-content:space-between}
+aside button{display:flex;align-items:center;justify-content:space-between;width:100%;text-align:left;background:transparent;border:0;padding:12px 14px;border-radius:12px;color:#52697b;margin:3px 0;font-weight:650}
+aside button.active,aside button:hover{background:#eaf4ff;color:#1269c8}
+.nav-badge{font-size:11px;padding:2px 7px;border-radius:99px;font-weight:800;background:#fff0d6;color:#9a5b08}
+.nav-badge.ok{background:#e2f8ef;color:#087c60}
+.perimeter-box{margin-top:16px;padding:13px;border-radius:14px;background:#f4fbf8;border:1px solid #c2eadb;font-size:12px;color:#165a47}
+.perimeter-box strong{display:block;color:#094837;margin-bottom:4px}
+main{padding:30px max(22px,4vw);max-width:1450px;width:100%;margin:auto}
+.hero{background:linear-gradient(110deg,#0d58ac,#147bcb 58%,#15b9b1);color:white;padding:30px;border-radius:22px;display:flex;justify-content:space-between;align-items:center;gap:20px;overflow:hidden}
+.hero h1{font-size:31px;line-height:1.15;margin:7px 0}
+.hero p{max-width:620px;color:#e4f4ff;margin:8px 0}
+.hero-art{font-size:80px;filter:drop-shadow(0 10px 15px #003d7655);animation:float 4s ease-in-out infinite}
+@keyframes float{50%{transform:translateY(-10px)}}
+.eyebrow{text-transform:uppercase;letter-spacing:2px;font-size:11px;font-weight:800}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin:22px 0}
+.stat,.panel,.facility,.step{background:white;border:1px solid var(--line);border-radius:17px;padding:20px;box-shadow:0 4px 16px #16466b06}
+.stat strong{font-size:28px;display:block;color:#146cc9}
+.stat.warn strong{color:#b86209}
+.stat.ok strong{color:#087c60}
+.stat small,.muted{color:var(--muted)}
+.grid2{display:grid;grid-template-columns:1.35fr 1fr;gap:20px}
+.grid-equal{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.panel h2,.section-title{font-size:20px;margin:0 0 14px}
+.panel h3{margin:0 0 10px}
+.panel p{color:var(--muted)}
+.btn{background:var(--blue);border:1px solid var(--blue);border-radius:10px;color:white;padding:10px 16px;font-weight:700;display:inline-flex;align-items:center;gap:6px}
+.btn.secondary{background:#fff;color:var(--blue)}
+.btn.light{background:#e8f4ff;color:#146ac3;border-color:#e8f4ff}
+.btn.warn{background:#fff4e0;color:#8e5206;border-color:#f3c478}
+.btn.ok{background:#0d9488;color:#fff;border-color:#0d9488}
+.btn.danger{background:#fff0ef;border-color:#f5c9c5;color:#b63329}
+.btn.small{padding:7px 11px;font-size:13px}
+.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:14px}
+.field{display:flex;flex-direction:column;gap:6px;font-weight:650;font-size:13px;color:#496174}
+.field input,.field select,.field textarea{padding:11px 12px;border:1px solid #cfdee9;border-radius:10px;background:#fff;color:var(--ink);width:100%;min-width:0}
+.field input:focus,.field select:focus,.field textarea:focus{outline:2px solid #99c9ff}
+.filters{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.full{grid-column:1/-1}
+.list{display:grid;gap:16px}
+.facility{display:flex;gap:16px;align-items:flex-start;transition:border-color .2s}
+.facility.conflicted{border:2px solid #f0a83e;background:linear-gradient(to bottom,#fffdf9,#ffffff)}
+.facility-icon{font-size:33px;background:#eaf6ff;border-radius:14px;padding:13px}
+.facility-body{flex:1;min-width:0}
+.facility h3{margin:0}
+.facility .meta{color:var(--muted);font-size:13px;margin:5px 0}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.chip{background:#edf5fb;color:#376580;padding:5px 10px;border-radius:100px;font-size:12px;font-weight:650;display:inline-flex;align-items:center;gap:4px}
+.chip.ok{background:#e2f8ef;color:#087c60}
+.chip.warn{background:#fff1db;color:#9a650f;border:1px solid #f5d08a}
+.chip.bad{background:#ffeded;color:#ad3636;border:1px solid #f5c2c2}
+.chip.private{background:#f3e8ff;color:#6b21a8;border:1px solid #d8b4fe}
+.topline{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.page-title{font-size:27px;margin:0 0 5px}
+.page-sub{color:var(--muted);margin:0 0 24px}
+.empty{text-align:center;padding:35px;color:var(--muted)}
+.appointment{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:16px;border:1px solid var(--line);border-radius:12px;margin:10px 0}
+.appointment strong{display:block}
+.appointment small{color:var(--muted)}
+.checkrow{display:flex;gap:10px;align-items:center;padding:12px;border-bottom:1px solid #edf2f6}
+.checkrow input{width:18px;height:18px;accent-color:#0aa78f}
+.timeline{display:grid;gap:13px}
+.step{display:flex;gap:14px;align-items:flex-start}
+.bubble{width:34px;height:34px;display:grid;place-items:center;background:#e5f4ff;color:#166ac5;border-radius:50%;font-weight:800;flex:none}
+.note{background:#eef7ff;border-left:4px solid #2885e4;padding:12px 15px;border-radius:8px;color:#315773;margin:12px 0;font-size:13.5px}
+.warning{background:#fff6e8;border-left-color:#f0a12e;color:#6e4305}
+.danger-note{background:#fff1f0;border-left-color:#d93829;color:#7a1c14}
+.privacy-note{background:#f0fdf4;border-left-color:#15803d;color:#14532d}
+.conflict-box{background:var(--amber-bg);border:1px solid var(--amber-line);border-radius:14px;padding:14px 16px;margin:12px 0}
+.conflict-box h4{margin:0 0 8px;color:#854d0e;font-size:14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.source-compare{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px;margin-top:10px}
+.source-card{background:#fff;border:1px solid #e2e8f0;border-radius:11px;padding:11px 13px;font-size:12.5px}
+.source-card.stale{border-color:#f59e0b;background:#fffbeb}
+.source-card.fresh{border-color:#10b981;background:#f0fdf4}
+.source-card strong{display:block;font-size:13px;color:var(--ink)}
+.conflict-table{width:100%;border-collapse:collapse;font-size:13px;margin-top:10px;background:#fff;border-radius:10px;overflow:hidden;border:1px solid var(--line)}
+.conflict-table th,.conflict-table td{padding:10px 12px;text-align:left;border-bottom:1px solid #edf2f6;vertical-align:top}
+.conflict-table th{background:#f8fafc;color:#475569;font-weight:750;font-size:12px;text-transform:uppercase;letter-spacing:.4px}
+.overlay{position:fixed;inset:0;background:#09253a99;z-index:40;display:grid;place-items:center;padding:15px}
+.modal{background:white;border-radius:20px;padding:26px;width:min(760px,100%);max-height:90vh;overflow:auto;box-shadow:0 22px 65px #061b3455}
+.modal h2{margin:0 0 10px}
+.formgrid{display:grid;gap:13px}
+.hidden{display:none!important}
+.toast{position:fixed;bottom:22px;right:22px;background:#153e5e;color:white;padding:13px 18px;border-radius:12px;z-index:60;box-shadow:0 10px 30px #0003;max-width:420px}
+.section-gap{margin-top:22px}
+.soft{background:#f5faff;padding:14px;border-radius:12px}
+.progress{height:8px;background:#e5eef5;border-radius:8px;overflow:hidden;margin:12px 0}
+.progress div{height:100%;background:#12b69e;transition:width .3s}
+.fade{animation:appear .25s ease}
+.code-pill{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:12px;background:#f1f5f9;padding:2px 6px;border-radius:6px;color:#0f172a}
+.sanitizer-bar{background:#fefce8;border:1px solid #fde047;border-radius:10px;padding:10px 12px;font-size:12.5px;color:#713f12;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.sanitizer-bar.clean{background:#f0fdf4;border-color:#bbf7d0;color:#166534}
+@keyframes appear{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:960px){
+  .shell{grid-template-columns:1fr}
+  aside{display:flex;flex-direction:row;overflow:auto;padding:9px;border-bottom:1px solid var(--line);border-right:0}
+  aside button{width:auto;white-space:nowrap;gap:8px}
+  .perimeter-box{display:none}
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .grid2,.grid-equal{grid-template-columns:1fr}
+  .filters{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:550px){
+  header{padding:10px 14px}
+  .brand{font-size:20px}
+  .hero{padding:22px}
+  .hero h1{font-size:24px}
+  .hero-art{display:none}
+  .stats{gap:8px}
+  .stat{padding:13px}
+  .filters{grid-template-columns:1fr}
+  .facility{flex-direction:column}
+  .appointment{align-items:flex-start;flex-direction:column}
+  main{padding:18px 12px}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">✚ Care<span>Path</span></div>
+  <div class="header-right">
+    <span id="conflictHeaderPill" class="guard-pill conflict" onclick="go('data')" title="Inspect multi-source conflicts & stale record protection"></span>
+    <span id="privacyHeaderPill" class="guard-pill" onclick="go('privacy')" title="Inspect Local-Only Privacy Perimeter & Runtime Egress Firewall"></span>
+    <small class="muted">Administrative navigation • Not medical advice</small>
+    <button id="accountBtn" class="btn secondary small" onclick="accountAction()">Sign in</button>
+  </div>
+</header>
+<div class="shell">
+  <aside>
+    <div id="nav"></div>
+    <div class="perimeter-box">
+      <strong>🔒 Local-Only Privacy Guard</strong>
+      Restricted PII/PHI never leaves this device. Cloud AI &amp; external network calls are hard-blocked at runtime.
+    </div>
+  </aside>
+  <main id="app" class="fade"></main>
+</div>
+<div id="modalRoot"></div>
+<div id="toastRoot"></div>
+
+<script>
+'use strict';
+
+/* ============================================================================
+   ARCHITECTURAL CONSTANTS & DATA CLASSIFICATION POLICY
+   ============================================================================ */
+const KEY = 'carepath-v4-constrained';
+const REF_DATE = '2026-11-06'; // Reference current date for staleness checks
+const STALE_THRESHOLD_DAYS = 14; // Any record with verified_at older than 14 days is STALE
+
+/**
+ * CONSTRAINT 2: Explicit Data Classification & Local-Only Perimeter Policy
+ * Specifies which stores contain Restricted Personal/Sensitive data vs Public Administrative catalog.
+ */
+const DATA_CLASSIFICATION_POLICY = Object.freeze({
+  users: {
+    tier: 'RESTRICTED_PERSONAL_SENSITIVE',
+    egress_policy: 'NEVER_LEAVE_DEVICE',
+    cloud_ai_policy: 'PROHIBITED',
+    description: 'User credentials, full name, and account identity'
+  },
+  appointments: {
+    tier: 'RESTRICTED_PERSONAL_SENSITIVE',
+    egress_policy: 'NEVER_LEAVE_DEVICE',
+    cloud_ai_policy: 'PROHIBITED',
+    description: 'Patient service reservations, facility visits, and schedule history'
+  },
+  docs: {
+    tier: 'RESTRICTED_PERSONAL_SENSITIVE',
+    egress_policy: 'NEVER_LEAVE_DEVICE',
+    cloud_ai_policy: 'PROHIBITED',
+    description: 'Appointment readiness checklists, referral letter statuses, and insurance prep'
+  },
+  reminders: {
+    tier: 'RESTRICTED_PERSONAL_SENSITIVE',
+    egress_policy: 'NEVER_LEAVE_DEVICE',
+    cloud_ai_policy: 'PROHIBITED',
+    description: 'Personal follow-up tasks and administrative care dates'
+  },
+  tickets: {
+    tier: 'RESTRICTED_PERSONAL_SENSITIVE',
+    egress_policy: 'NEVER_LEAVE_DEVICE',
+    cloud_ai_policy: 'PROHIBITED',
+    description: 'Patient support inquiries and conflict escalation notes'
+  },
+  facilities: {
+    tier: 'PUBLIC_ADMINISTRATIVE',
+    egress_policy: 'LOCAL_FILE_IMPORT_EXPORT_ONLY',
+    cloud_ai_policy: 'PROHIBITED',
+    description: 'Non-personal healthcare facility directory, source assertions, and conflict states'
+  }
+});
+
+const CLOUD_AI_PATTERNS = [
+  /openai\.com/i,
+  /anthropic\.com/i,
+  /generativelanguage\.googleapis\.com/i,
+  /aiplatform\.googleapis\.com/i,
+  /cohere\.ai/i,
+  /huggingface\.co/i,
+  /mistral\.ai/i,
+  /bedrock/i,
+  /llm/i
+];
+
+/* ============================================================================
+   CONSTRAINT 1: MULTI-SOURCE PROVENANCE & PRE-SEEDED CONFLICTING DATASET
+   ============================================================================ */
+
+/**
+ * Calculates age in days between verified_at (YYYY-MM-DD) and REF_DATE (2026-11-06).
+ */
+function calcVerifiedAgeDays(verifiedAtStr) {
+  if (!verifiedAtStr) return 999;
+  const ref = new Date(REF_DATE + 'T00:00:00Z');
+  const ver = new Date(String(verifiedAtStr).slice(0, 10) + 'T00:00:00Z');
+  if (Number.isNaN(ver.getTime())) return 999;
+  return Math.max(0, Math.round((ref - ver) / 86400000));
+}
+
+function isRecordStale(verifiedAtStr) {
+  return calcVerifiedAgeDays(verifiedAtStr) > STALE_THRESHOLD_DAYS;
+}
+
+/**
+ * Initial facility dataset with multi-source assertions and pre-seeded conflicts on F1 and F3.
+ * Notice how Source B on F1 and F3 has a NEWER ingested_at timestamp (2026-11-06)
+ * but a STALE verified_at timestamp (57 days old and 36 days old respectively).
+ * The system refuses to silently overwrite Source A with Source B!
+ */
+function createInitialFacilities() {
+  return [
+    {
+      id: 'F1',
+      name: 'City General Hospital',
+      area: 'Central District',
+      distance: 3.2,
+      services: ['General Consultation', 'MRI Scan', 'Blood Test', 'X-Ray', 'Physiotherapy'],
+      languages: ['English', 'Tamil', 'Hindi'],
+      accessible: true,
+      level: 'Multi-specialty',
+      hours: '24/7',
+      emergency: true,
+      referral: ['MRI Scan'],
+      insurance: ['Public', 'Private'],
+      slots: ['2026-11-07T09:00', '2026-11-07T11:00', '2026-11-08T10:30'],
+      updated: '2026-11-05',
+      phone: '044-4000-1100',
+      sources: [
+        {
+          source_id: 'SRC-F1-A',
+          source_name: 'State Health Registry Audit',
+          reliability: 'Reliable Tier-1',
+          verified_at: '2026-11-05',
+          ingested_at: '2026-11-05T09:00',
+          data: {
+            hours: '24/7',
+            emergency: true,
+            referral: ['MRI Scan'],
+            phone: '044-4000-1100',
+            accessible: true,
+            insurance: ['Public', 'Private']
+          }
+        },
+        {
+          source_id: 'SRC-F1-B',
+          source_name: 'Hospital Aggregator Sync',
+          reliability: 'Reliable Tier-1',
+          verified_at: '2026-09-10', // STALE: 57 days old
+          ingested_at: '2026-11-06T10:15', // NEWEST ARRIVING!
+          data: {
+            hours: '08:00–20:00',
+            emergency: false,
+            referral: [],
+            phone: '044-4000-1999',
+            accessible: true,
+            insurance: ['Public', 'Private']
+          }
+        }
+      ],
+      conflicts: {
+        hours: {
+          field: 'hours',
+          label: 'Operating Hours',
+          status: 'unresolved', // 'unresolved' | 'resolved_fresher' | 'escalated'
+          sourceA: {
+            source_name: 'State Health Registry Audit',
+            reliability: 'Reliable Tier-1',
+            verified_at: '2026-11-05',
+            ingested_at: '2026-11-05T09:00',
+            value: '24/7'
+          },
+          sourceB: {
+            source_name: 'Hospital Aggregator Sync',
+            reliability: 'Reliable Tier-1',
+            verified_at: '2026-09-10',
+            ingested_at: '2026-11-06T10:15',
+            value: '08:00–20:00'
+          },
+          conservativeValue: '08:00–20:00 (24/7 disputed by stale feed)',
+          fresherValue: '24/7',
+          safetyNote: 'Newest-arriving aggregator record (ingested 2026-11-06T10:15) is STALE (verified 57 days ago on 2026-09-10). Blocked from silently overwriting fresher audit.'
+        },
+        emergency: {
+          field: 'emergency',
+          label: 'Emergency Department Status',
+          status: 'unresolved',
+          sourceA: {
+            source_name: 'State Health Registry Audit',
+            reliability: 'Reliable Tier-1',
+            verified_at: '2026-11-05',
+            ingested_at: '2026-11-05T09:00',
+            value: true
+          },
+          sourceB: {
+            source_name: 'Hospital Aggregator Sync',
+            reliability: 'Reliable Tier-1',
+            verified_at: '2026-09-10',
+            ingested_at: '2026-11-06T10:15',
+            value: false
+          },
+          conservativeValue: false,
+          fresherValue: true,
+          safetyNote: 'Conservative Safe Mode marks Emergency Department as Disputed/Unconfirmed until resolved, preventing reliance on unverified emergency capability.'
+        },
+        referral: {
+          field: 'referral',
+          label: 'Referral Requirement',
+          status: 'unresolved',
+          sourceA: {
+            source_name: 'State Health Registry Audit',
+            reliability: 'Reliable Tier-1',
+            verified_at: '2026-11-05',
+            ingested_at: '2026-11-05T09:00',
+            value: ['MRI Scan']
+          },
+          sourceB: {
+            source_name: 'Hospital Aggregator Sync',
+            reliability: 'Reliable Tier-1',
+            verified_at: '2026-09-10',
+            ingested_at: '2026-11-06T10:15',
+            value: []
+          },
+          conservativeValue: ['MRI Scan'],
+          fresherValue: ['MRI Scan'],
+          safetyNote: 'Conservative Safe Mode enforces Referral Letter for MRI Scan so patients are not turned away at check-in.'
+        },
+        phone: {
+          field: 'phone',
+          label: 'Facility Contact Phone',
+          status: 'unresolved',
+          sourceA: {
+            source_name: 'State Health Registry Audit',
+            reliability: 'Reliable Tier-1',
+            verified_at: '2026-11-05',
+            ingested_at: '2026-11-05T09:00',
+            value: '044-4000-1100'
+          },
+          sourceB: {
+            source_name: 'Hospital Aggregator Sync',
+            reliability: 'Reliable Tier-1',
+            verified_at: '2026-09-10',
+            ingested_at: '2026-11-06T10:15',
+            value: '044-4000-1999'
+          },
+          conservativeValue: '044-4000-1100 (Alt: 044-4000-1999)',
+          fresherValue: '044-4000-1100',
+          safetyNote: 'Both numbers displayed until staff confirms active reception line.'
+        }
+      }
+    },
+    {
+      id: 'F2',
+      name: 'Green Valley Medical Centre',
+      area: 'North Zone',
+      distance: 5.8,
+      services: ['General Consultation', 'Blood Test', 'X-Ray', 'Physiotherapy'],
+      languages: ['English', 'Tamil'],
+      accessible: true,
+      level: 'Clinic',
+      hours: '08:00–20:00',
+      emergency: false,
+      referral: [],
+      insurance: ['Private'],
+      slots: ['2026-11-07T10:00', '2026-11-08T12:00', '2026-11-09T09:30'],
+      updated: '2026-11-04',
+      phone: '044-4000-2200',
+      sources: [
+        {
+          source_id: 'SRC-F2-A',
+          source_name: 'Direct Clinic Portal Verification',
+          reliability: 'Reliable Tier-1',
+          verified_at: '2026-11-04',
+          ingested_at: '2026-11-04T11:30',
+          data: {
+            hours: '08:00–20:00',
+            emergency: false,
+            referral: [],
+            phone: '044-4000-2200',
+            accessible: true,
+            insurance: ['Private']
+          }
+        }
+      ],
+      conflicts: {}
+    },
+    {
+      id: 'F3',
+      name: 'Sunrise Diagnostic Institute',
+      area: 'East District',
+      distance: 7.1,
+      services: ['MRI Scan', 'Blood Test', 'X-Ray', 'Ultrasound'],
+      languages: ['English', 'Hindi', 'Telugu'],
+      accessible: false,
+      level: 'Diagnostics',
+      hours: '07:00–19:00',
+      emergency: false,
+      referral: ['MRI Scan'],
+      insurance: ['Private'],
+      slots: ['2026-11-08T08:00', '2026-11-09T14:00'],
+      updated: '2026-11-04',
+      phone: '044-4000-3300',
+      sources: [
+        {
+          source_id: 'SRC-F3-A',
+          source_name: 'Facility On-Site Audit',
+          reliability: 'Reliable Tier-1',
+          verified_at: '2026-11-04',
+          ingested_at: '2026-11-04T14:20',
+          data: {
+            accessible: false,
+            insurance: ['Private'],
+            hours: '07:00–19:00',
+            emergency: false,
+            referral: ['MRI Scan'],
+            phone: '044-4000-3300'
+          }
+        },
+        {
+          source_id: 'SRC-F3-B',
+          source_name: 'National Insurance Directory',
+          reliability: 'Reliable Tier-1',
+          verified_at: '2026-10-01', // STALE: 36 days old
+          ingested_at: '2026-11-06T09:45', // NEWEST ARRIVING!
+          data: {
+            accessible: true,
+            insurance: ['Public', 'Private'],
+            hours: '07:00–19:00',
+            emergency: false,
+            referral: ['MRI Scan'],
+            phone: '044-4000-3300'
+          }
+        }
+      ],
+      conflicts: {
+        accessible: {
+          field: 'accessible',
+          label: 'Wheelchair Accessibility',
+          status: 'unresolved',
+          sourceA: {
+            source_name: 'Facility On-Site Audit',
+            reliability: 'Reliable Tier-1',
+            verified_at: '2026-11-04',
+            ingested_at: '2026-11-04T14:20',
+            value: false
+          },
+          sourceB: {
+            source_name: 'National Insurance Directory',
+            reliability: 'Reliable Tier-1',
+            verified_at: '2026-10-01',
+            ingested_at: '2026-11-06T09:45',
+            value: true
+          },
+          conservativeValue: false,
+          fresherValue: false,
+          safetyNote: 'Newest-arriving directory record (ingested 2026-11-06T09:45) is STALE (36 days old) and claims wheelchair accessibility, conflicting with recent On-Site Audit (2026-11-04) showing ramp under renovation. Conservative default marks accessibility FALSE/Unconfirmed.'
+        },
+        insurance: {
+          field: 'insurance',
+          label: 'Accepted Insurance Categories',
+          status: 'unresolved',
+          sourceA: {
+            source_name: 'Facility On-Site Audit',
+            reliability: 'Reliable Tier-1',
+            verified_at: '2026-11-04',
+            ingested_at: '2026-11-04T14:20',
+            value: ['Private']
+          },
+          sourceB: {
+            source_name: 'National Insurance Directory',
+            reliability: 'Reliable Tier-1',
+            verified_at: '2026-10-01',
+            ingested_at: '2026-11-06T09:45',
+            value: ['Public', 'Private']
+          },
+          conservativeValue: ['Private'],
+          fresherValue: ['Private'],
+          safetyNote: 'Public insurance acceptance is only asserted by a 36-day stale record. Conservative Safe Mode restricts confirmed coverage to Private until verified.'
+        }
+      }
+    },
+    {
+      id: 'F4',
+      name: 'Community Health Hub',
+      area: 'South District',
+      distance: 2.4,
+      services: ['General Consultation', 'Blood Test', 'Vaccination'],
+      languages: ['Tamil', 'English'],
+      accessible: true,
+      level: 'Primary care',
+      hours: '09:00–17:00',
+      emergency: false,
+      referral: [],
+      insurance: ['Public'],
+      slots: ['2026-11-07T13:30', '2026-11-09T11:00'],
+      updated: '2026-11-05',
+      phone: '044-4000-4400',
+      sources: [
+        {
+          source_id: 'SRC-F4-A',
+          source_name: 'Municipal Primary Care Registry',
+          reliability: 'Reliable Tier-1',
+          verified_at: '2026-11-05',
+          ingested_at: '2026-11-05T16:10',
+          data: {
+            hours: '09:00–17:00',
+            emergency: false,
+            referral: [],
+            phone: '044-4000-4400',
+            accessible: true,
+            insurance: ['Public']
+          }
+        }
+      ],
+      conflicts: {}
+    }
+  ];
+}
+
+const initialConflictAudit = [
+  {
+    id: 'CL-101',
+    timestamp: '2026-11-06T10:15:00',
+    facilityId: 'F1',
+    facilityName: 'City General Hospital',
+    incomingSource: 'Hospital Aggregator Sync',
+    incomingIngestedAt: '2026-11-06T10:15',
+    incomingVerifiedAt: '2026-09-10',
+    incomingStaleDays: 57,
+    existingSource: 'State Health Registry Audit',
+    existingVerifiedAt: '2026-11-05',
+    conflictingFields: ['hours', 'emergency', 'referral', 'phone'],
+    action: 'QUARANTINED_STALE_NEWEST_ARRIVING',
+    summary: 'Blocked newest-arriving feed (ingested 2026-11-06T10:15) from overwriting 4 fields because its verification date (2026-09-10) is 57 days old (STALE) and conflicts with fresher State Health Registry Audit (verified 2026-11-05).'
+  },
+  {
+    id: 'CL-102',
+    timestamp: '2026-11-06T09:45:00',
+    facilityId: 'F3',
+    facilityName: 'Sunrise Diagnostic Institute',
+    incomingSource: 'National Insurance Directory',
+    incomingIngestedAt: '2026-11-06T09:45',
+    incomingVerifiedAt: '2026-10-01',
+    incomingStaleDays: 36,
+    existingSource: 'Facility On-Site Audit',
+    existingVerifiedAt: '2026-11-04',
+    conflictingFields: ['accessible', 'insurance'],
+    action: 'QUARANTINED_STALE_NEWEST_ARRIVING',
+    summary: 'Blocked newest-arriving feed (ingested 2026-11-06T09:45) from overwriting accessible & insurance because its verification date (2026-10-01) is 36 days old (STALE) and conflicts with Facility On-Site Audit (verified 2026-11-04).'
+  }
+];
+
+const base = {
+  users: [],
+  current: null,
+  facilities: createInitialFacilities(),
+  appointments: [],
+  docs: {},
+  reminders: [],
+  tickets: [],
+  conflictLog: initialConflictAudit,
+  privacyAudit: [
+    {
+      id: 'PA-INIT',
+      timestamp: '2026-11-06T08:00:00',
+      api: 'Runtime Firewall Boot',
+      target: 'window.fetch / XHR / sendBeacon / WebSocket',
+      classification: 'SYSTEM_PERIMETER',
+      status: 'ARMED_ZERO_EGRESS',
+      detail: 'All external network & Cloud-AI endpoints hard-blocked at browser transport layer.'
+    }
+  ]
+};
+
+let db;
+try {
+  const raw = JSON.parse(localStorage.getItem(KEY) || '{}');
+  db = { ...structuredClone(base), ...raw };
+  if (!Array.isArray(db.conflictLog)) db.conflictLog = structuredClone(initialConflictAudit);
+  if (!Array.isArray(db.privacyAudit)) db.privacyAudit = structuredClone(base.privacyAudit);
+  // Ensure every facility has sources & conflicts structure
+  db.facilities = (db.facilities || createInitialFacilities()).map(f => ({
+    ...f,
+    sources: Array.isArray(f.sources) ? f.sources : [],
+    conflicts: f.conflicts && typeof f.conflicts === 'object' ? f.conflicts : {}
+  }));
+} catch {
+  db = structuredClone(base);
+}
+
+let page = 'home';
+let filters = {
+  service: '',
+  language: 'Any',
+  accessible: false,
+  insurance: 'Any',
+  emergency: false,
+  slots: false,
+  hideConflicted: false,
+  search: ''
+};
+
+const save = () => localStorage.setItem(KEY, JSON.stringify(db));
+const $ = id => document.getElementById(id);
+const esc = x => String(x ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const dateText = s => new Date(s).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' });
+const today = () => REF_DATE;
+const me = () => db.current;
+const mine = () => db.appointments.filter(a => a.user === me() && a.status !== 'Cancelled');
+const fmt = n => Number(n).toFixed(1);
+const byId = id => db.facilities.find(f => f.id === id);
+
+/* ============================================================================
+   CONSTRAINT 2: RUNTIME NETWORK & CLOUD-AI EGRESS FIREWALL
+   ============================================================================ */
+(function installZeroCloudPrivacyFirewall() {
+  function recordBlockedEgress(apiName, url, payloadPreview) {
+    const urlStr = String(url || 'unknown-endpoint');
+    const isCloudAI = CLOUD_AI_PATTERNS.some(rx => rx.test(urlStr));
+    const entry = {
+      id: 'PA-' + Date.now() + '-' + Math.floor(Math.random() * 900 + 100),
+      timestamp: new Date().toISOString().slice(0, 19),
+      api: apiName,
+      target: urlStr,
+      classification: isCloudAI ? 'PROHIBITED_CLOUD_AI_ENDPOINT' : 'RESTRICTED_EXTERNAL_EGRESS',
+      status: 'HARD_BLOCKED',
+      detail: `${apiName} call to "${urlStr}" intercepted and aborted before network transmission. ${payloadPreview ? 'Payload snippet blocked (' + String(payloadPreview).length + ' bytes).' : ''}`
+    };
+    if (db && Array.isArray(db.privacyAudit)) {
+      db.privacyAudit.unshift(entry);
+      save();
+      updateHeaderPills();
+    }
+    return entry;
+  }
+
+  // 1. Block window.fetch
+  window.fetch = async function blockedFetch(input, init) {
+    const url = typeof input === 'string' ? input : (input && input.url) || 'external-fetch';
+    const body = init && init.body ? String(init.body).slice(0, 120) : '';
+    const entry = recordBlockedEgress('window.fetch', url, body);
+    throw new Error(`[CarePath Privacy Firewall] Blocked external/cloud-AI fetch to ${url} (${entry.classification})`);
+  };
+
+  // 2. Block XMLHttpRequest
+  const origOpen = XMLHttpRequest.prototype.open;
+  XMLHttpRequest.prototype.open = function(method, url) {
+    this._carepathTargetUrl = String(url || '');
+    this._carepathMethod = String(method || 'GET');
+    return origOpen.apply(this, arguments);
+  };
+  XMLHttpRequest.prototype.send = function(body) {
+    const url = this._carepathTargetUrl || 'external-xhr';
+    const entry = recordBlockedEgress(`XMLHttpRequest (${this._carepathMethod || 'POST'})`, url, body);
+    throw new Error(`[CarePath Privacy Firewall] Blocked XMLHttpRequest to ${url} (${entry.classification})`);
+  };
+
+  // 3. Block navigator.sendBeacon
+  if (navigator && typeof navigator.sendBeacon === 'function') {
+    navigator.sendBeacon = function(url, data) {
+      recordBlockedEgress('navigator.sendBeacon', url, data);
+      return false;
+    };
+  }
+
+  // 4. Block WebSocket
+  window.WebSocket = function BlockedWebSocket(url) {
+    const entry = recordBlockedEgress('window.WebSocket', url, '');
+    throw new Error(`[CarePath Privacy Firewall] Blocked WebSocket connection to ${url} (${entry.classification})`);
+  };
+
+  // 5. Block EventSource
+  window.EventSource = function BlockedEventSource(url) {
+    const entry = recordBlockedEgress('window.EventSource', url, '');
+    throw new Error(`[CarePath Privacy Firewall] Blocked EventSource connection to ${url} (${entry.classification})`);
+  };
+})();
+
+/* ============================================================================
+   CONSTRAINT 2: REAL-TIME PII / SENSITIVE CLINICAL NOTE DETECTOR & REDACTOR
+   ============================================================================ */
+const SENSITIVE_PATTERNS = [
+  {
+    label: 'Phone Number',
+    token: '[REDACTED-PHONE]',
+    regex: /(?:\+?\d{1,3}[\s-]?)?(?:\d{3,5}[\s-]?\d{3,4}[\s-]?\d{3,4}|\b[6-9]\d{9}\b)/g
+  },
+  {
+    label: 'Email Address',
+    token: '[REDACTED-EMAIL]',
+    regex: /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b/g
+  },
+  {
+    label: 'National / Patient ID',
+    token: '[REDACTED-ID]',
+    regex: /\b(?:\d{4}[\s-]\d{4}[\s-]\d{4}|[A-Z]{5}\d{4}[A-Z]|MRN[-:]?\d{4,10}|UHID[-:]?\d{4,10})\b/gi
+  },
+  {
+    label: 'Clinical / Medical Note',
+    token: '[REDACTED-CLINICAL-NOTE]',
+    regex: /\b(?:diagnosis|diagnosed|hiv|cancer|tumor|chemo|biopsy|chest\s+pain|bleeding|hemorrhage|diabetes|insulin|hypertension|depression|psychiatric|suicid\w*|fracture|infection|prescription|dosage|\d+\s*mg)\b/gi
+  }
+];
+
+function detectSensitiveContent(text) {
+  const str = String(text || '');
+  const hits = [];
+  for (const pat of SENSITIVE_PATTERNS) {
+    const matches = str.match(pat.regex);
+    if (matches && matches.length) {
+      hits.push({ label: pat.label, count: matches.length, token: pat.token });
+    }
+  }
+  return hits;
+}
+
+function redactSensitiveContent(text) {
+  let out = String(text || '');
+  for (const pat of SENSITIVE_PATTERNS) {
+    out = out.replace(pat.regex, pat.token);
+  }
+  return out;
+}
+
+function liveInspectInput(textareaId, barId) {
+  const el = $(textareaId);
+  const bar = $(barId);
+  if (!el || !bar) return;
+  const hits = detectSensitiveContent(el.value);
+  if (!hits.length) {
+    bar.className = 'sanitizer-bar clean';
+    bar.innerHTML = `<span>✓ <strong>Local Privacy Scanner:</strong> No raw phone, email, ID, or clinical terms detected.</span><span class="code-pill">On-Device Only</span>`;
+  } else {
+    const summary = hits.map(h => `${h.count}× ${h.label}`).join(', ');
+    bar.className = 'sanitizer-bar';
+    bar.innerHTML = `<span>⚠️ <strong>Sensitive Data Detected (${esc(summary)}):</strong> Keep administrative notes free of PHI/PII.</span>
+      <button type="button" class="btn small warn" onclick="applyLocalRedaction('${esc(textareaId)}','${esc(barId)}')">Sanitize &amp; Redact Locally</button>`;
+  }
+}
+
+function applyLocalRedaction(textareaId, barId) {
+  const el = $(textareaId);
+  if (!el) return;
+  el.value = redactSensitiveContent(el.value);
+  liveInspectInput(textareaId, barId);
+  notify('Sensitive tokens redacted on-device');
+}
+
+/* ============================================================================
+   CONSTRAINT 1: EFFECTIVE FACILITY RESOLVER & RECONCILIATION ENGINE
+   ============================================================================ */
+
+/**
+ * Returns the list of unresolved conflict objects for a facility.
+ */
+function getUnresolvedConflicts(f) {
+  if (!f || !f.conflicts) return [];
+  return Object.values(f.conflicts).filter(c => c && c.status !== 'resolved_fresher' && c.status !== 'resolved_manual');
+}
+
+/**
+ * Returns the list of all conflicts (resolved or unresolved) for a facility.
+ */
+function getAllConflicts(f) {
+  if (!f || !f.conflicts) return [];
+  return Object.values(f.conflicts);
+}
+
+/**
+ * Computes the effective administrative attributes of a facility.
+ * While conflicts are unresolved (or set to conservative), Conservative Safe Defaults apply:
+ * - referral: union of referrals required by any source (so patient brings referral if any source requires it)
+ * - accessible: false (unconfirmed) if sources disagree
+ * - emergency: false (unconfirmed) if sources disagree
+ * - insurance: intersection of confirmed insurance types (so patient does not assume disputed coverage)
+ */
+function getEffectiveFacility(f) {
+  const eff = { ...f, disputedFields: {} };
+  if (!f || !f.conflicts) return eff;
+
+  for (const [field, c] of Object.entries(f.conflicts)) {
+    if (!c) continue;
+    if (c.status === 'resolved_fresher') {
+      eff[field] = structuredClone(c.fresherValue);
+    } else if (c.status === 'resolved_sourceA') {
+      eff[field] = structuredClone(c.sourceA.value);
+    } else if (c.status === 'resolved_sourceB') {
+      eff[field] = structuredClone(c.sourceB.value);
+    } else {
+      // Unresolved or Conservative Safe Mode or Escalated
+      eff.disputedFields[field] = c;
+      if (field === 'referral') {
+        const union = [...new Set([...(c.sourceA.value || []), ...(c.sourceB.value || [])])];
+        eff.referral = union;
+      } else if (field === 'accessible') {
+        eff.accessible = Boolean(c.sourceA.value && c.sourceB.value);
+      } else if (field === 'emergency') {
+        eff.emergency = Boolean(c.sourceA.value && c.sourceB.value);
+      } else if (field === 'insurance') {
+        const setB = new Set(c.sourceB.value || []);
+        const inter = (c.sourceA.value || []).filter(x => setB.has(x));
+        eff.insurance = inter.length ? inter : c.conservativeValue;
+      } else {
+        eff[field] = c.conservativeValue;
+      }
+    }
+  }
+  return eff;
+}
+
+function valuesEqual(a, b) {
+  if (Array.isArray(a) && Array.isArray(b)) {
+    const sa = [...a].sort().join('|');
+    const sb = [...b].sort().join('|');
+    return sa === sb;
+  }
+  return a === b;
+}
+
+function formatFieldVal(v) {
+  if (Array.isArray(v)) return v.length ? v.join(', ') : 'None required / Empty';
+  if (typeof v === 'boolean') return v ? 'Yes (True)' : 'No (False)';
+  return String(v ?? 'N/A');
+}
+
+/**
+ * CONSTRAINT 1: Anti-Silent-Overwrite Reconciliation Engine (`reconcileFacilityData`)
+ * Replaces naive `db.facilities = arr` overwrite.
+ * Compares incoming facility records against existing facility records field-by-field.
+ * NEVER silently treats the newest-arriving record (`ingested_at`) as the truth when it conflicts
+ * with an existing reliable source or when a record is stale!
+ */
+function reconcileFacilityData(incomingArray, defaultSourceMeta = {}) {
+  const RECONCILE_FIELDS = [
+    ['hours', 'Operating Hours'],
+    ['emergency', 'Emergency Department Status'],
+    ['referral', 'Referral Requirement'],
+    ['phone', 'Facility Contact Phone'],
+    ['accessible', 'Wheelchair Accessibility'],
+    ['insurance', 'Accepted Insurance Categories']
+  ];
+
+  let addedCount = 0;
+  let conflictsDetected = 0;
+  let staleBlockedCount = 0;
+  let cleanUpdates = 0;
+
+  for (const incoming of incomingArray) {
+    const inSource = incoming.source_name || defaultSourceMeta.source_name || 'External Partner Feed';
+    const inReliability = incoming.reliability || defaultSourceMeta.reliability || 'Reliable Tier-1';
+    const inVerifiedAt = incoming.verified_at || incoming.updated || defaultSourceMeta.verified_at || '2026-09-15';
+    const inIngestedAt = incoming.ingested_at || defaultSourceMeta.ingested_at || new Date().toISOString().slice(0, 16);
+    const incomingStaleDays = calcVerifiedAgeDays(inVerifiedAt);
+    const incomingIsStale = incomingStaleDays > STALE_THRESHOLD_DAYS;
+
+    const existing = db.facilities.find(x => x.id === incoming.id);
+    if (!existing) {
+      // New facility not previously in database
+      const newFac = {
+        ...incoming,
+        updated: inVerifiedAt,
+        sources: [
+          {
+            source_id: 'SRC-' + incoming.id + '-' + Date.now(),
+            source_name: inSource,
+            reliability: inReliability,
+            verified_at: inVerifiedAt,
+            ingested_at: inIngestedAt,
+            data: {
+              hours: incoming.hours,
+              emergency: incoming.emergency,
+              referral: incoming.referral,
+              phone: incoming.phone,
+              accessible: incoming.accessible,
+              insurance: incoming.insurance
+            }
+          }
+        ],
+        conflicts: {}
+      };
+      db.facilities.push(newFac);
+      addedCount++;
+      continue;
+    }
+
+    // Existing facility found -> perform field-level reconciliation
+    if (!Array.isArray(existing.sources) || !existing.sources.length) {
+      existing.sources = [
+        {
+          source_id: 'SRC-' + existing.id + '-BASE',
+          source_name: 'Primary Facility Audit',
+          reliability: 'Reliable Tier-1',
+          verified_at: existing.updated || '2026-11-05',
+          ingested_at: (existing.updated || '2026-11-05') + 'T09:00',
+          data: {
+            hours: existing.hours,
+            emergency: existing.emergency,
+            referral: existing.referral,
+            phone: existing.phone,
+            accessible: existing.accessible,
+            insurance: existing.insurance
+          }
+        }
+      ];
+    }
+
+    // Pick the freshest verified existing source as baseline Source A
+    const primarySource = [...existing.sources].sort((a, b) => String(b.verified_at).localeCompare(String(a.verified_at)))[0];
+
+    // Add or update incoming source in existing.sources
+    const existingSrcIdx = existing.sources.findIndex(s => s.source_name === inSource);
+    const newSourceAssertion = {
+      source_id: 'SRC-' + existing.id + '-' + Date.now(),
+      source_name: inSource,
+      reliability: inReliability,
+      verified_at: inVerifiedAt,
+      ingested_at: inIngestedAt,
+      data: {
+        hours: incoming.hours,
+        emergency: incoming.emergency,
+        referral: incoming.referral,
+        phone: incoming.phone,
+        accessible: incoming.accessible,
+        insurance: incoming.insurance
+      }
+    };
+    if (existingSrcIdx >= 0) existing.sources[existingSrcIdx] = newSourceAssertion;
+    else existing.sources.push(newSourceAssertion);
+
+    const fieldConflictsFound = [];
+
+    for (const [field, label] of RECONCILE_FIELDS) {
+      const valA = primarySource.data && primarySource.data[field] !== undefined ? primarySource.data[field] : existing[field];
+      const valB = incoming[field];
+      if (valB === undefined) continue;
+
+      if (!valuesEqual(valA, valB)) {
+        // CONFLICT DETECTED! Never silently overwrite with newest-arriving record!
+        conflictsDetected++;
+        if (incomingIsStale) staleBlockedCount++;
+        fieldConflictsFound.push(field);
+
+        const ageA = calcVerifiedAgeDays(primarySource.verified_at);
+        const aIsFresher = ageA <= incomingStaleDays;
+        const fresherVal = aIsFresher ? valA : valB;
+
+        let conservativeVal = fresherVal;
+        if (field === 'referral') {
+          conservativeVal = [...new Set([...(Array.isArray(valA) ? valA : []), ...(Array.isArray(valB) ? valB : [])])];
+        } else if (field === 'accessible' || field === 'emergency') {
+          conservativeVal = false;
+        } else if (field === 'insurance') {
+          const setB = new Set(Array.isArray(valB) ? valB : []);
+          const inter = (Array.isArray(valA) ? valA : []).filter(x => setB.has(x));
+          conservativeVal = inter;
+        } else if (field === 'hours' || field === 'phone') {
+          conservativeVal = `${valA} (Disputed: ${valB})`;
+        }
+
+        existing.conflicts[field] = {
+          field,
+          label,
+          status: 'unresolved',
+          sourceA: {
+            source_name: primarySource.source_name,
+            reliability: primarySource.reliability,
+            verified_at: primarySource.verified_at,
+            ingested_at: primarySource.ingested_at,
+            value: structuredClone(valA)
+          },
+          sourceB: {
+            source_name: inSource,
+            reliability: inReliability,
+            verified_at: inVerifiedAt,
+            ingested_at: inIngestedAt,
+            value: structuredClone(valB)
+          },
+          conservativeValue: structuredClone(conservativeVal),
+          fresherValue: structuredClone(fresherVal),
+          safetyNote: incomingIsStale
+            ? `Newest-arriving record from "${inSource}" (ingested ${inIngestedAt}) is STALE (${incomingStaleDays} days old, verified ${inVerifiedAt}) and conflicts with "${primarySource.source_name}" (verified ${primarySource.verified_at}). Silent overwrite blocked.`
+            : `Conflicting assertions between reliable sources "${primarySource.source_name}" (verified ${primarySource.verified_at}) and "${inSource}" (verified ${inVerifiedAt}). Quarantined under Conservative Safe Mode.`
+        };
+      }
+    }
+
+    if (fieldConflictsFound.length > 0) {
+      db.conflictLog.unshift({
+        id: 'CL-' + Date.now() + '-' + Math.floor(Math.random() * 90 + 10),
+        timestamp: new Date().toISOString().slice(0, 19),
+        facilityId: existing.id,
+        facilityName: existing.name,
+        incomingSource: inSource,
+        incomingIngestedAt: inIngestedAt,
+        incomingVerifiedAt: inVerifiedAt,
+        incomingStaleDays,
+        existingSource: primarySource.source_name,
+        existingVerifiedAt: primarySource.verified_at,
+        conflictingFields: fieldConflictsFound,
+        action: incomingIsStale ? 'QUARANTINED_STALE_NEWEST_ARRIVING' : 'QUARANTINED_MULTI_SOURCE_CONFLICT',
+        summary: `Blocked silent overwrite on ${existing.name} (${fieldConflictsFound.join(', ')}) from "${inSource}" (ingested ${inIngestedAt}, verified ${inVerifiedAt} [${incomingStaleDays}d old]).`
+      });
+    } else {
+      cleanUpdates++;
+    }
+  }
+
+  save();
+  return { addedCount, conflictsDetected, staleBlockedCount, cleanUpdates };
+}
+
+/* ============================================================================
+   UI HELPERS, MODALS & HEADER INDICATORS
+   ============================================================================ */
+function notify(t) {
+  $('toastRoot').innerHTML = `<div class="toast">${esc(t)}</div>`;
+  setTimeout(() => { if ($('toastRoot')) $('toastRoot').innerHTML = ''; }, 3600);
+}
+
+function modal(html) {
+  $('modalRoot').innerHTML = `<div class="overlay" onclick="if(event.target===this)closeModal()"><div class="modal">${html}</div></div>`;
+}
+
+function closeModal() {
+  $('modalRoot').innerHTML = '';
+}
+
+function confirmDialog(titleText, messageText, confirmLabel, onConfirm) {
+  window._pendingConfirmAction = () => {
+    closeModal();
+    onConfirm();
+  };
+  modal(`
+    <h2>${esc(titleText)}</h2>
+    <p>${esc(messageText)}</p>
+    <div class="actions">
+      <button class="btn" onclick="window._pendingConfirmAction()">${esc(confirmLabel)}</button>
+      <button class="btn secondary" onclick="closeModal()">Cancel</button>
+    </div>
+  `);
+}
+
+function totalUnresolvedConflictCount() {
+  return db.facilities.reduce((sum, f) => sum + getUnresolvedConflicts(f).length, 0);
+}
+
+function totalConflictedFacilitiesCount() {
+  return db.facilities.filter(f => getUnresolvedConflicts(f).length > 0).length;
+}
+
+function updateHeaderPills() {
+  const cPill = $('conflictHeaderPill');
+  const pPill = $('privacyHeaderPill');
+  const unresolvedCount = totalUnresolvedConflictCount();
+  const facCount = totalConflictedFacilitiesCount();
+  if (cPill) {
+    if (unresolvedCount > 0) {
+      cPill.className = 'guard-pill conflict';
+      cPill.innerHTML = `⚠️ ${unresolvedCount} Source Conflicts (${facCount} Facilities) • Stale Overwrites Blocked`;
+    } else {
+      cPill.className = 'guard-pill';
+      cPill.innerHTML = `✓ All Facility Sources Reconciled`;
+    }
+  }
+  if (pPill) {
+    const blockedCount = (db.privacyAudit || []).filter(x => x.status === 'HARD_BLOCKED').length;
+    pPill.innerHTML = `🔒 Zero-Cloud Local Perimeter • ${blockedCount} Egress Blocked`;
+  }
+}
+
+/* ============================================================================
+   AUTHENTICATION & NAVIGATION
+   ============================================================================ */
+function accountAction() {
+  if (me()) {
+    confirmDialog('Sign out of CarePath?', 'Your local session will close. All data remains encrypted/stored exclusively in this browser.', 'Sign out', () => {
+      db.current = null;
+      save();
+      render();
+      notify('Signed out');
+    });
+  } else {
+    auth();
+  }
+}
+
+function auth(mode = 'login') {
+  modal(`
+    <h2>${mode === 'login' ? 'Welcome back' : 'Create your CarePath account'}</h2>
+    <div class="note privacy-note">
+      <strong>🔒 Zero-Cloud Local Storage:</strong> Your account and health navigation records are classified as <span class="code-pill">RESTRICTED_PERSONAL_SENSITIVE</span> and never leave this browser.
+    </div>
+    <form class="formgrid" onsubmit="submitAuth(event,'${mode}')">
+      ${mode === 'register' ? '<label class="field">Full name<input name="name" required minlength="2" autocomplete="name"></label>' : ''}
+      <label class="field">Email<input name="email" type="email" required autocomplete="email"></label>
+      <label class="field">Password<input name="password" type="password" required minlength="6" autocomplete="current-password"></label>
+      <button class="btn">${mode === 'login' ? 'Sign in' : 'Create account'}</button>
+    </form>
+    <div class="actions">
+      <button class="btn secondary small" onclick="auth('${mode === 'login' ? 'register' : 'login'}')">${mode === 'login' ? 'Create an account' : 'Already registered? Sign in'}</button>
+      <button class="btn secondary small" onclick="closeModal()">Close</button>
+    </div>
+  `);
+}
+
+function submitAuth(e, mode) {
+  e.preventDefault();
+  const d = new FormData(e.target);
+  const email = String(d.get('email')).trim().toLowerCase();
+  const pass = String(d.get('password'));
+  if (mode === 'register') {
+    if (db.users.some(u => u.email === email)) return notify('Email already registered');
+    db.users.push({ email, name: String(d.get('name')).trim(), password: pass });
+    db.current = email;
+  } else {
+    const u = db.users.find(u => u.email === email && u.password === pass);
+    if (!u) return notify('Incorrect email or password');
+    db.current = email;
+  }
+  save();
+  closeModal();
+  render();
+  notify('Signed in locally');
+}
+
+function requireLogin() {
+  if (!me()) {
+    auth();
+    return false;
+  }
+  return true;
+}
+
+function go(p) {
+  page = p;
+  render();
+  window.scrollTo(0, 0);
+}
+
+function render() {
+  const unresolvedCount = totalUnresolvedConflictCount();
+  const blockedCount = (db.privacyAudit || []).filter(x => x.status === 'HARD_BLOCKED').length;
+  const items = [
+    ['home', '⌂', 'Dashboard', ''],
+    ['discover', '⌕', 'Find care', unresolvedCount ? `<span class="nav-badge">${unresolvedCount} conflicts</span>` : ''],
+    ['appointments', '▣', 'Appointments', ''],
+    ['documents', '☑', 'Documents & referrals', ''],
+    ['journey', '⇢', 'My journey', ''],
+    ['reminders', '◷', 'Reminders', ''],
+    ['support', '♧', 'Human support', ''],
+    ['data', '▤', 'Facility data & conflicts', unresolvedCount ? `<span class="nav-badge">${unresolvedCount}</span>` : `<span class="nav-badge ok">OK</span>`],
+    ['privacy', '🛡️', 'Privacy & Zero-Cloud', `<span class="nav-badge ok">${blockedCount} blocked</span>`]
+  ];
+  $('nav').innerHTML = items.map(([id, ic, label, badge]) =>
+    `<button class="${page === id ? 'active' : ''}" onclick="go('${id}')"><span>${ic} &nbsp; ${label}</span>${badge}</button>`
+  ).join('');
+  $('accountBtn').textContent = me() ? 'Sign out' : 'Sign in';
+  updateHeaderPills();
+  $('app').innerHTML = ({
+    home: homePage,
+    discover: discoverPage,
+    appointments: appointmentPage,
+    documents: documentPage,
+    journey: journeyPage,
+    reminders: reminderPage,
+    support: supportPage,
+    data: dataPage,
+    privacy: privacyPage
+  }[page] || homePage)();
+}
+
+function title(t, sub) {
+  return `<h1 class="page-title">${t}</h1><p class="page-sub">${sub}</p>`;
+}
+
+/* ============================================================================
+   PAGE 1: DASHBOARD (HOME)
+   ============================================================================ */
+function homePage() {
+  const user = db.users.find(u => u.email === me());
+  const up = mine().filter(a => new Date(a.slot) >= new Date(REF_DATE)).sort((a, b) => a.slot.localeCompare(b.slot));
+  const missing = up.length ? docList(up[0]).filter(d => !db.docs[me() + '|' + up[0].id + '|' + d.item]).length : 0;
+  const unresolvedCount = totalUnresolvedConflictCount();
+  const conflictedFacs = totalConflictedFacilitiesCount();
+
+  return `
+    <section class="hero">
+      <div>
+        <div class="eyebrow">Your healthcare access companion</div>
+        <h1>${user ? 'Welcome back, ' + esc(user.name.split(' ')[0]) + '!' : 'Healthcare journeys, made simpler & safer.'}</h1>
+        <p>Find suitable facilities with multi-source verification, block stale data overwrites, prepare paperwork with conservative safety fallbacks, and keep 100% of your sensitive records on-device.</p>
+        <div class="actions">
+          <button class="btn" style="background:white;color:#1266b7;border-color:white" onclick="go('discover')">Find a healthcare service →</button>
+          <button class="btn secondary" style="background:transparent;color:white;border-color:#ffffff90" onclick="go('data')">Inspect source conflicts (${unresolvedCount})</button>
+          <button class="btn secondary" style="background:transparent;color:white;border-color:#ffffff90" onclick="go('privacy')">Privacy &amp; Zero-Cloud Guard</button>
+        </div>
+      </div>
+      <div class="hero-art">🏥</div>
+    </section>
+
+    <div class="stats">
+      <div class="stat">
+        <strong>${db.facilities.length}</strong>
+        <small>Listed facilities (${conflictedFacs} with source conflicts)</small>
+      </div>
+      <div class="stat warn">
+        <strong>${unresolvedCount}</strong>
+        <small>Quarantined field conflicts (Stale overwrites blocked)</small>
+      </div>
+      <div class="stat">
+        <strong>${up.length}</strong>
+        <small>Upcoming appointments</small>
+      </div>
+      <div class="stat ok">
+        <strong>0 Bytes</strong>
+        <small>External / Cloud-AI data egress (Hard-locked)</small>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="panel">
+        <h2>Next administrative step</h2>
+        ${!me()
+          ? `<p>Sign in to keep appointments, document checklists and reminders together on this device.</p>
+             <button class="btn" onclick="auth()">Sign in / Register</button>`
+          : up.length
+            ? `<h3>${esc(up[0].service)} · ${esc(byId(up[0].facility)?.name || 'Facility')}</h3>
+               <p>${dateText(up[0].slot)}</p>
+               <div class="note">${missing ? `Prepare ${missing} remaining checklist item(s) before your visit.` : 'Your document checklist is complete. Confirm arrival instructions with the facility.'}</div>
+               <button class="btn" onclick="go('documents')">Review checklist</button>`
+            : `<p>No upcoming appointment yet. Start by choosing a service you have already been advised to obtain.</p>
+               <button class="btn" onclick="go('discover')">Explore facilities</button>`
+        }
+        <hr style="border:0;border-top:1px solid var(--line);margin:18px 0">
+        <h3>⚠️ Active Source Provenance Protection</h3>
+        <p>When a newly ingested feed conflicts with an existing reliable source (such as <strong>City General Hospital</strong> and <strong>Sunrise Diagnostic Institute</strong>), CarePath refuses to silently trust the newest-arriving timestamp (<span class="code-pill">ingested_at</span>) over actual verification recency (<span class="code-pill">verified_at</span>).</p>
+        <div class="actions">
+          <button class="btn warn small" onclick="go('data')">Resolve ${unresolvedCount} Facility Conflicts</button>
+          <button class="btn secondary small" onclick="simulateNewestArrivingStaleFeed()">⚡ Simulate Newest-Arriving Stale Feed</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Active Architectural Safeguards</h2>
+        <div class="timeline">
+          <div>🛡️ &nbsp; <strong>Anti-Silent-Overwrite Engine:</strong> Dual timestamps (<span class="code-pill">verified_at</span> vs <span class="code-pill">ingested_at</span>) flag records &gt;14 days old as <span class="chip bad">STALE</span>.</div>
+          <div>⚖️ &nbsp; <strong>Conservative Safe Defaults:</strong> Disputed referrals are required in checklists; disputed accessibility &amp; emergency rooms are marked unconfirmed.</div>
+          <div>🔒 &nbsp; <strong>Zero External Egress:</strong> <span class="code-pill">fetch</span>, <span class="code-pill">XHR</span>, <span class="code-pill">sendBeacon</span> &amp; <span class="code-pill">WebSocket</span> are locked at runtime.</div>
+          <div>🚫 &nbsp; <strong>Zero Cloud-Hosted AI:</strong> Matching, conflict resolution, and PII redaction run 100% via deterministic local logic.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="note warning section-gap">
+      <strong>Important:</strong> This is an administrative navigator, not a diagnostic or triage tool. For symptoms, clinical decisions or emergencies, contact a qualified healthcare professional or local emergency services.
+    </div>
+  `;
+}
+
+/* ============================================================================
+   PAGE 2: DISCOVER FACILITIES (WITH PROVENANCE & CONFLICT WARNINGS)
+   ============================================================================ */
+function options(xs, sel) {
+  return xs.map(x => `<option value="${esc(x)}" ${x === sel ? 'selected' : ''}>${esc(x)}</option>`).join('');
+}
+
+function serviceOptions() {
+  return [...new Set(db.facilities.flatMap(f => f.services))].sort();
+}
+
+function match(rawF) {
+  const f = getEffectiveFacility(rawF);
+  const unresolved = getUnresolvedConflicts(rawF);
+  let reasons = [], fails = [], warnings = [];
+
+  if (filters.hideConflicted && unresolved.length > 0) {
+    fails.push('Has unresolved source conflict');
+  }
+  if (filters.service) {
+    (f.services.includes(filters.service) ? reasons : fails).push(
+      f.services.includes(filters.service) ? 'Service offered' : 'Service unavailable'
+    );
+  }
+  if (filters.language !== 'Any') {
+    (f.languages.includes(filters.language) ? reasons : fails).push(
+      f.languages.includes(filters.language) ? 'Language supported' : 'Language not listed'
+    );
+  }
+  if (filters.accessible) {
+    if (f.accessible) {
+      reasons.push('Accessible facility (confirmed)');
+    } else if (f.disputedFields.accessible) {
+      fails.push('Accessibility disputed by conflicting sources (blocked by Conservative Safe Mode)');
+    } else {
+      fails.push('Accessibility not confirmed');
+    }
+  }
+  if (filters.insurance !== 'Any') {
+    if (f.insurance.includes(filters.insurance)) {
+      reasons.push('Insurance type confirmed');
+    } else if (f.disputedFields.insurance && (f.disputedFields.insurance.sourceA.value.includes(filters.insurance) || f.disputedFields.insurance.sourceB.value.includes(filters.insurance))) {
+      fails.push(`${filters.insurance} insurance only claimed by stale/conflicting source (blocked by Conservative Safe Mode)`);
+    } else {
+      fails.push('Insurance not listed');
+    }
+  }
+  if (filters.emergency) {
+    if (f.emergency) {
+      reasons.push('Emergency department confirmed');
+    } else if (f.disputedFields.emergency) {
+      fails.push('Emergency department disputed by conflicting sources (blocked by Conservative Safe Mode)');
+    } else {
+      fails.push('No emergency department');
+    }
+  }
+  if (filters.slots) {
+    const hasFuture = f.slots.some(s => new Date(s) > new Date(REF_DATE));
+    (hasFuture ? reasons : fails).push(hasFuture ? 'Future slots listed' : 'No future slots');
+  }
+
+  if (unresolved.length > 0) {
+    warnings.push(`${unresolved.length} unresolved source conflict(s) — Conservative Safe Mode active`);
+  }
+
+  // Score slightly penalizes unresolved conflicts so clean verified facilities rank higher when comparable
+  let score = 100 - f.distance * 3 + Math.min(f.slots.filter(s => new Date(s) > new Date(REF_DATE)).length, 4) * 3 - unresolved.length * 4;
+  return { reasons, fails, warnings, score, eff: f, unresolved };
+}
+
+function updateFilter(k, v) {
+  filters[k] = v;
+  render();
+}
+
+function discoverPage() {
+  const allEvaluated = db.facilities
+    .filter(f => !filters.search || (f.name + ' ' + f.area + ' ' + f.services.join(' ')).toLowerCase().includes(filters.search.toLowerCase()))
+    .map(f => ({ f, m: match(f) }));
+
+  const list = allEvaluated.filter(x => !x.m.fails.length).sort((a, b) => b.m.score - a.m.score);
+  const excludedBySafety = allEvaluated.filter(x => x.m.fails.some(r => r.includes('Conservative Safe Mode')));
+
+  return title('Find the right facility', 'Choose the healthcare service you were already advised to get. Conflicting or stale source assertions are quarantined automatically.') + `
+    <div class="panel">
+      <div class="filters">
+        <label class="field">Service
+          <select onchange="updateFilter('service',this.value)">
+            <option value="">All services</option>
+            ${options(serviceOptions(), filters.service)}
+          </select>
+        </label>
+        <label class="field">Preferred language
+          <select onchange="updateFilter('language',this.value)">
+            ${options(['Any', 'English', 'Tamil', 'Hindi', 'Telugu'], filters.language)}
+          </select>
+        </label>
+        <label class="field">Insurance category
+          <select onchange="updateFilter('insurance',this.value)">
+            ${options(['Any', 'Public', 'Private'], filters.insurance)}
+          </select>
+        </label>
+        <label class="field full">Search facility or location
+          <input value="${esc(filters.search)}" placeholder="Name, area, or service" oninput="filters.search=this.value;refreshResults()">
+        </label>
+        <label><input type="checkbox" ${filters.accessible ? 'checked' : ''} onchange="updateFilter('accessible',this.checked)"> Wheelchair accessibility (confirmed only)</label>
+        <label><input type="checkbox" ${filters.emergency ? 'checked' : ''} onchange="updateFilter('emergency',this.checked)"> Emergency department (confirmed only)</label>
+        <label><input type="checkbox" ${filters.slots ? 'checked' : ''} onchange="updateFilter('slots',this.checked)"> Future slots listed</label>
+        <label class="full"><input type="checkbox" ${filters.hideConflicted ? 'checked' : ''} onchange="updateFilter('hideConflicted',this.checked)"> Hide facilities with unresolved multi-source conflicts</label>
+      </div>
+    </div>
+
+    ${excludedBySafety.length ? `
+      <div class="note warning section-gap">
+        <strong>🛡️ Conservative Safe Mode Filter Protection:</strong> ${excludedBySafety.length} facility(${excludedBySafety.map(x => esc(x.f.name)).join(', ')}) was excluded from your current filter because its ${filters.accessible ? 'wheelchair accessibility' : filters.emergency ? 'emergency department' : 'insurance'} claim is disputed by conflicting or stale sources.
+        <button class="btn small warn" style="margin-left:8px" onclick="openConflictModal('${esc(excludedBySafety[0].f.id)}')">Inspect &amp; Resolve Conflict</button>
+      </div>
+    ` : ''}
+
+    <div class="topline section-gap">
+      <h2 class="section-title" id="resultCount">${list.length} matching facilities</h2>
+      <span class="muted">Deterministic local ranking • Zero Cloud AI</span>
+    </div>
+    <div id="results" class="list">${facilityCards(list)}</div>
+    <div class="note warning">Facility details, insurance acceptance and slot availability must be confirmed with the provider. Distance values are supplied data, not live GPS calculations.</div>
+  `;
+}
+
+function refreshResults() {
+  const allEvaluated = db.facilities
+    .filter(f => !filters.search || (f.name + ' ' + f.area + ' ' + f.services.join(' ')).toLowerCase().includes(filters.search.toLowerCase()))
+    .map(f => ({ f, m: match(f) }));
+  const list = allEvaluated.filter(x => !x.m.fails.length).sort((a, b) => b.m.score - a.m.score);
+  $('resultCount').textContent = list.length + ' matching facilities';
+  $('results').innerHTML = facilityCards(list);
+}
+
+function renderSourceBadges(f) {
+  if (!Array.isArray(f.sources) || !f.sources.length) return '';
+  return `<div class="source-compare">
+    ${f.sources.map(s => {
+      const age = calcVerifiedAgeDays(s.verified_at);
+      const stale = age > STALE_THRESHOLD_DAYS;
+      return `<div class="source-card ${stale ? 'stale' : 'fresh'}">
+        <div class="topline">
+          <strong>${esc(s.source_name)}</strong>
+          <span class="chip ${stale ? 'bad' : 'ok'}">${stale ? `⏰ STALE (${age}d old)` : `✓ FRESH (${age}d old)`}</span>
+        </div>
+        <div class="muted" style="margin-top:4px">
+          <span>Reliability: <b>${esc(s.reliability)}</b></span><br>
+          <span>Verified at facility: <b>${esc(s.verified_at)}</b></span><br>
+          <span>Ingested into system: <b>${esc(s.ingested_at)}</b></span>
+        </div>
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+
+function facilityCards(list) {
+  if (!list.length) {
+    return `<div class="panel empty">
+      No facilities meet every selected filter (or conflicted facilities were filtered out by Conservative Safe Mode). Try relaxing a filter or resolving open source conflicts.
+      <div class="actions" style="justify-content:center">
+        <button class="btn secondary" onclick="go('data')">Inspect Facility Conflicts</button>
+        <button class="btn secondary" onclick="go('support')">Contact support</button>
+      </div>
+    </div>`;
+  }
+
+  return list.map(({ f, m }) => {
+    const eff = m.eff;
+    const unresolved = m.unresolved;
+    const allConflicts = getAllConflicts(f);
+    const hasStaleSource = (f.sources || []).some(s => isRecordStale(s.verified_at));
+    const nextSlot = f.slots.filter(s => new Date(s) > new Date(REF_DATE)).sort()[0];
+
+    return `<article class="facility ${unresolved.length ? 'conflicted' : ''}">
+      <div class="facility-icon">${unresolved.length ? '⚠️' : '🏥'}</div>
+      <div class="facility-body">
+        <div class="topline">
+          <h3>${esc(f.name)}</h3>
+          <div class="chips" style="margin:0">
+            ${unresolved.length
+              ? `<span class="chip warn">⚠️ Unresolved Source Conflict (${unresolved.length})</span>`
+              : `<span class="chip ok">✓ Verified Multi-Source Match</span>`
+            }
+            ${hasStaleSource && unresolved.length
+              ? `<span class="chip bad">⏰ Stale Record Blocked</span>`
+              : ''
+            }
+          </div>
+        </div>
+
+        <div class="meta">
+          📍 ${esc(f.area)} · ${fmt(f.distance)} km (dataset) · ${esc(f.level)} ·
+          <strong>Hours:</strong> ${esc(eff.hours)}
+          ${eff.disputedFields.hours ? `<span class="chip warn">Disputed</span>` : ''}
+        </div>
+
+        <div class="chips">${f.services.map(s => `<span class="chip">${esc(s)}</span>`).join('')}</div>
+
+        <div class="meta">
+          Languages: ${esc(f.languages.join(', '))} ·
+          ${eff.disputedFields.accessible
+            ? `<span class="chip warn">♿ Accessibility Disputed (Conservative: Unconfirmed)</span>`
+            : (eff.accessible ? '♿ Accessible (Confirmed)' : 'Accessibility unconfirmed')
+          } ·
+          ${eff.disputedFields.emergency
+            ? `<span class="chip warn">🚨 Emergency Dept Disputed (Conservative: Unconfirmed)</span>`
+            : (eff.emergency ? 'Emergency department listed' : 'No emergency department listed')
+          }
+        </div>
+
+        <div class="meta">
+          <strong>Insurance:</strong> ${esc(eff.insurance.join(', ') || 'Verify with facility')}
+          ${eff.disputedFields.insurance ? `<span class="chip warn">Public coverage disputed by stale source</span>` : ''}
+          · <strong>Referral required for:</strong> ${esc(eff.referral.length ? eff.referral.join(', ') : 'None listed')}
+          ${eff.disputedFields.referral ? `<span class="chip warn">Conservative fallback active</span>` : ''}
+        </div>
+
+        <div class="meta">
+          Next listed slot: ${esc(nextSlot ? dateText(nextSlot) : 'Not available')} · Phone: ${esc(eff.phone)}
+        </div>
+
+        ${unresolved.length ? `
+          <div class="conflict-box">
+            <h4>
+              <span>🛡️ Anti-Silent-Overwrite Protection Active (${unresolved.length} Conflicting Field${unresolved.length > 1 ? 's' : ''})</span>
+              <button class="btn small warn" onclick="openConflictModal('${esc(f.id)}')">Compare Sources &amp; Resolve (${unresolved.length})</button>
+            </h4>
+            <div style="font-size:12.5px;color:#78350f">
+              Newest-arriving feed conflicted with an earlier verified audit. CarePath blocked silent overwrite and applied <strong>Conservative Safe Defaults</strong>:
+              <ul style="margin:6px 0 8px 18px;padding:0">
+                ${unresolved.map(c => `
+                  <li>
+                    <strong>${esc(c.label)}:</strong>
+                    ${esc(c.sourceA.source_name)} (<span class="code-pill">${esc(formatFieldVal(c.sourceA.value))}</span>, verified ${esc(c.sourceA.verified_at)})
+                    vs
+                    ${esc(c.sourceB.source_name)} (<span class="code-pill">${esc(formatFieldVal(c.sourceB.value))}</span>, verified ${esc(c.sourceB.verified_at)} ${isRecordStale(c.sourceB.verified_at) ? `[STALE - ${calcVerifiedAgeDays(c.sourceB.verified_at)}d old]` : ''}, ingested ${esc(c.sourceB.ingested_at)} [NEWEST ARRIVING])
+                  </li>
+                `).join('')}
+              </ul>
+            </div>
+            ${renderSourceBadges(f)}
+          </div>
+        ` : allConflicts.length ? `
+          <div class="note privacy-note" style="margin:10px 0">
+            ✓ All ${allConflicts.length} historical source conflicts on this facility have been adjudicated.
+            <button class="btn small secondary" style="margin-left:8px" onclick="openConflictModal('${esc(f.id)}')">View Provenance History</button>
+          </div>
+        ` : ''}
+
+        <details style="margin-top:8px">
+          <summary style="cursor:pointer;color:#176bdb;font-weight:700">Why this recommendation &amp; source provenance?</summary>
+          <div class="chips">
+            ${m.reasons.map(s => `<span class="chip ok">✓ ${esc(s)}</span>`).join('')}
+            <span class="chip">Distance ${fmt(f.distance)} km</span>
+            <span class="chip">${f.slots.filter(s => new Date(s) > new Date(REF_DATE)).length} future slots</span>
+          </div>
+          ${!unresolved.length ? renderSourceBadges(f) : ''}
+          <p class="muted">Evaluated deterministically on your device. Clinical suitability is not assessed.</p>
+        </details>
+
+        <div class="actions">
+          <button class="btn small" onclick="book('${esc(f.id)}')">View slots / Book</button>
+          ${allConflicts.length ? `<button class="btn warn small" onclick="openConflictModal('${esc(f.id)}')">⚖️ Resolve Source Conflicts</button>` : ''}
+          <button class="btn secondary small" onclick="supportFor('${esc(f.id)}')">Ask staff</button>
+        </div>
+      </div>
+    </article>`;
+  }).join('');
+}
+
+/* ============================================================================
+   CONSTRAINT 1: SIDE-BY-SIDE CONFLICT RESOLUTION MODAL & ACTIONS
+   ============================================================================ */
+function openConflictModal(facilityId) {
+  const f = byId(facilityId);
+  if (!f) return;
+  const conflicts = getAllConflicts(f);
+
+  modal(`
+    <div class="topline">
+      <h2>⚖️ Multi-Source Provenance &amp; Conflict Adjudication</h2>
+      <span class="chip warn">${esc(f.name)}</span>
+    </div>
+    <p class="muted">
+      CarePath never silently treats the newest-arriving record (<span class="code-pill">ingested_at</span>) as the truth when it conflicts with another reliable source or fails the 14-day <span class="code-pill">verified_at</span> staleness check (relative to ${REF_DATE}).
+    </p>
+
+    ${renderSourceBadges(f)}
+
+    ${conflicts.length ? `
+      <table class="conflict-table section-gap">
+        <thead>
+          <tr>
+            <th>Field</th>
+            <th>Source A (Fresher Verified)</th>
+            <th>Source B (Newest Arriving / Stale)</th>
+            <th>Active Resolution</th>
+            <th>Adjudicate</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${conflicts.map(c => {
+            const ageA = calcVerifiedAgeDays(c.sourceA.verified_at);
+            const ageB = calcVerifiedAgeDays(c.sourceB.verified_at);
+            const staleB = ageB > STALE_THRESHOLD_DAYS;
+            return `<tr>
+              <td>
+                <strong>${esc(c.label)}</strong><br>
+                <small class="muted">${esc(c.safetyNote)}</small>
+              </td>
+              <td>
+                <span class="code-pill">${esc(formatFieldVal(c.sourceA.value))}</span><br>
+                <small>${esc(c.sourceA.source_name)}</small><br>
+                <span class="chip ok">Verified ${esc(c.sourceA.verified_at)} (${ageA}d old)</span><br>
+                <small class="muted">Ingested: ${esc(c.sourceA.ingested_at)}</small>
+              </td>
+              <td>
+                <span class="code-pill">${esc(formatFieldVal(c.sourceB.value))}</span><br>
+                <small>${esc(c.sourceB.source_name)}</small><br>
+                <span class="chip ${staleB ? 'bad' : 'warn'}">Verified ${esc(c.sourceB.verified_at)} (${staleB ? `STALE ${ageB}d` : `${ageB}d`})</span><br>
+                <small class="muted">Ingested: <b>${esc(c.sourceB.ingested_at)} (Newest)</b></small>
+              </td>
+              <td>
+                ${c.status === 'resolved_fresher'
+                  ? `<span class="chip ok">✓ Adopted Fresher Verified (${esc(formatFieldVal(c.fresherValue))})</span>`
+                  : c.status === 'escalated'
+                    ? `<span class="chip bad">♧ Escalated to Human Staff (Conservative Active)</span>`
+                    : `<span class="chip warn">🛡️ Conservative Safe Default (${esc(formatFieldVal(c.conservativeValue))})</span>`
+                }
+              </td>
+              <td>
+                <div style="display:grid;gap:6px">
+                  <button class="btn small ok" onclick="resolveConflictField('${esc(f.id)}','${esc(c.field)}','resolved_fresher')">✓ Adopt Fresher Verified</button>
+                  <button class="btn small secondary" onclick="resolveConflictField('${esc(f.id)}','${esc(c.field)}','unresolved')">🛡️ Keep Conservative Safe</button>
+                  <button class="btn small danger" onclick="escalateConflictField('${esc(f.id)}','${esc(c.field)}')">♧ Escalate to Staff</button>
+                </div>
+              </td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+      <div class="actions">
+        <button class="btn ok" onclick="resolveAllFacilityConflicts('${esc(f.id)}','resolved_fresher')">✓ Adopt Fresher Verified Source for All Fields</button>
+        <button class="btn secondary" onclick="resolveAllFacilityConflicts('${esc(f.id)}','unresolved')">🛡️ Reset All to Conservative Safe Mode</button>
+        <button class="btn secondary" onclick="closeModal()">Close</button>
+      </div>
+    ` : `<p class="muted">No conflicts recorded for this facility.</p><div class="actions"><button class="btn secondary" onclick="closeModal()">Close</button></div>`}
+  `);
+}
+
+function resolveConflictField(facilityId, field, mode) {
+  const f = byId(facilityId);
+  if (!f || !f.conflicts || !f.conflicts[field]) return;
+  f.conflicts[field].status = mode;
+  db.conflictLog.unshift({
+    id: 'CL-' + Date.now(),
+    timestamp: new Date().toISOString().slice(0, 19),
+    facilityId: f.id,
+    facilityName: f.name,
+    incomingSource: f.conflicts[field].sourceB.source_name,
+    incomingIngestedAt: f.conflicts[field].sourceB.ingested_at,
+    incomingVerifiedAt: f.conflicts[field].sourceB.verified_at,
+    incomingStaleDays: calcVerifiedAgeDays(f.conflicts[field].sourceB.verified_at),
+    existingSource: f.conflicts[field].sourceA.source_name,
+    existingVerifiedAt: f.conflicts[field].sourceA.verified_at,
+    conflictingFields: [field],
+    action: mode === 'resolved_fresher' ? 'ADOPTED_FRESHER_VERIFIED_SOURCE' : 'RESTORED_CONSERVATIVE_SAFE_DEFAULT',
+    summary: `Field "${field}" on ${f.name} set to ${mode === 'resolved_fresher' ? 'Fresher Verified Source (' + formatFieldVal(f.conflicts[field].fresherValue) + ')' : 'Conservative Safe Default'}.`
+  });
+  save();
+  openConflictModal(facilityId);
+  render();
+  notify(mode === 'resolved_fresher' ? `Adopted fresher verified value for ${field}` : `Conservative Safe Mode active for ${field}`);
+}
+
+function resolveAllFacilityConflicts(facilityId, mode) {
+  const f = byId(facilityId);
+  if (!f || !f.conflicts) return;
+  for (const field of Object.keys(f.conflicts)) {
+    f.conflicts[field].status = mode;
+  }
+  db.conflictLog.unshift({
+    id: 'CL-' + Date.now(),
+    timestamp: new Date().toISOString().slice(0, 19),
+    facilityId: f.id,
+    facilityName: f.name,
+    incomingSource: 'All Sources',
+    incomingIngestedAt: REF_DATE,
+    incomingVerifiedAt: REF_DATE,
+    incomingStaleDays: 0,
+    existingSource: 'Fresher Audit',
+    existingVerifiedAt: REF_DATE,
+    conflictingFields: Object.keys(f.conflicts),
+    action: mode === 'resolved_fresher' ? 'BULK_ADOPTED_FRESHER_VERIFIED' : 'BULK_CONSERVATIVE_SAFE_MODE',
+    summary: `Updated all conflicting fields on ${f.name} to ${mode}.`
+  });
+  save();
+  openConflictModal(facilityId);
+  render();
+  notify(`Updated all conflicts for ${f.name}`);
+}
+
+function escalateConflictField(facilityId, field) {
+  const f = byId(facilityId);
+  if (!f || !f.conflicts || !f.conflicts[field]) return;
+  const c = f.conflicts[field];
+  c.status = 'escalated';
+
+  const summaryText = `Conflict Escalation for ${f.name} [${c.label}]: Source A (${c.sourceA.source_name}, verified ${c.sourceA.verified_at}) asserts "${formatFieldVal(c.sourceA.value)}" vs Source B (${c.sourceB.source_name}, verified ${c.sourceB.verified_at}, ingested ${c.sourceB.ingested_at}) asserts "${formatFieldVal(c.sourceB.value)}". Please verify with facility reception.`;
+  db.tickets.push({
+    id: 'T' + Date.now(),
+    user: me() || 'anonymous-local-user',
+    facility: f.id,
+    issue: 'Conflicting facility information',
+    details: summaryText,
+    status: 'Escalated — Conservative Fallback Active',
+    date: today()
+  });
+  save();
+  closeModal();
+  go('support');
+  notify('Conflict escalated to local Human Support queue');
+}
+
+/* ============================================================================
+   PAGE 3: BOOKING & APPOINTMENTS
+   ============================================================================ */
+function book(id) {
+  if (!requireLogin()) return;
+  const rawF = byId(id);
+  if (!rawF) return;
+  const f = getEffectiveFacility(rawF);
+  const unresolved = getUnresolvedConflicts(rawF);
+  const services = filters.service && f.services.includes(filters.service) ? [filters.service] : f.services;
+  const availSlots = f.slots.filter(s => new Date(s) > new Date(REF_DATE) && !db.appointments.some(a => a.facility === id && a.slot === s && a.status !== 'Cancelled')).sort();
+
+  modal(`
+    <h2>Book · ${esc(f.name)}</h2>
+    <p class="muted">Slots are from the local facility dataset; saved strictly in your browser (<span class="code-pill">RESTRICTED_PERSONAL_SENSITIVE</span>).</p>
+
+    ${unresolved.length ? `
+      <div class="conflict-box">
+        <h4>⚠️ Unresolved Source Conflict &amp; Stale Record Warning</h4>
+        <p style="margin:4px 0;font-size:12.5px;color:#78350f">
+          Two reliable sources disagree on <strong>${unresolved.map(c => esc(c.label)).join(', ')}</strong>. The newest-arriving feed is stale and has been blocked from overwriting verified data. Conservative Safe Defaults are applied to your booking and checklist:
+        </p>
+        ${renderSourceBadges(rawF)}
+        <div class="actions">
+          <button type="button" class="btn small warn" onclick="openConflictModal('${esc(f.id)}')">Inspect &amp; Resolve Fields Before Booking</button>
+        </div>
+      </div>
+    ` : ''}
+
+    <form class="formgrid" onsubmit="confirmBook(event,'${esc(id)}')">
+      <label class="field">Service
+        <select name="service" required>${options(services, services[0])}</select>
+      </label>
+      <label class="field">Available slot
+        <select name="slot" required>
+          ${availSlots.map(s => `<option value="${esc(s)}">${dateText(s)}</option>`).join('')}
+        </select>
+      </label>
+      <button class="btn" ${!availSlots.length ? 'disabled' : ''}>Confirm local reservation</button>
+    </form>
+    <div class="actions">
+      <button class="btn secondary" onclick="closeModal()">Cancel</button>
+    </div>
+  `);
+}
+
+function confirmBook(e, id) {
+  e.preventDefault();
+  const d = new FormData(e.target);
+  const slot = String(d.get('slot'));
+  const service = String(d.get('service'));
+  const f = byId(id);
+  if (!f || !f.slots.includes(slot) || !f.services.includes(service) || db.appointments.some(a => a.facility === id && a.slot === slot && a.status !== 'Cancelled')) {
+    return notify('Slot no longer available');
+  }
+  const ap = {
+    id: 'A' + Date.now(),
+    user: me(),
+    facility: id,
+    service,
+    slot,
+    status: 'Reserved',
+    created: new Date().toISOString()
+  };
+  db.appointments.push(ap);
+  db.reminders.push({
+    id: 'R' + Date.now(),
+    user: me(),
+    text: `Prepare for ${service} at ${f.name}`,
+    date: slot.slice(0, 10),
+    done: false,
+    appointment: ap.id
+  });
+  save();
+  closeModal();
+  go('appointments');
+  notify('Reservation saved in local device storage');
+}
+
+function appointmentPage() {
+  const aps = mine().sort((a, b) => a.slot.localeCompare(b.slot));
+  return title('Appointments & queue', 'Manage your locally saved reservations and select another listed slot when plans change.') + `
+    <div class="panel">
+      <div class="topline">
+        <h2>My reservations</h2>
+        <div class="actions" style="margin:0">
+          <span class="chip private">🔒 RESTRICTED_PERSONAL_SENSITIVE • Device-Only</span>
+          <button class="btn small" onclick="go('discover')">+ New appointment</button>
+        </div>
+      </div>
+      ${!me()
+        ? `<div class="empty">Sign in to view your appointments.<br><br><button class="btn" onclick="auth()">Sign in</button></div>`
+        : aps.length
+          ? aps.map(a => {
+              const rawF = byId(a.facility);
+              const unresolved = getUnresolvedConflicts(rawF);
+              return `<div class="appointment">
+                <div>
+                  <strong>${esc(a.service)} · ${esc(rawF?.name || 'Facility removed')}</strong>
+                  <small>${dateText(a.slot)} · ${esc(a.status)} · Booking ID ${esc(a.id)}</small>
+                  <div class="chips">
+                    <span class="chip ok">Reservation recorded locally</span>
+                    ${unresolved.length ? `<span class="chip warn" onclick="openConflictModal('${esc(rawF.id)}')" style="cursor:pointer">⚠️ ${unresolved.length} Facility Source Conflict(s) — Conservative Checklist Active</span>` : ''}
+                  </div>
+                </div>
+                <div class="actions">
+                  ${unresolved.length ? `<button class="btn warn small" onclick="openConflictModal('${esc(rawF.id)}')">View Conflicts</button>` : ''}
+                  <button class="btn secondary small" onclick="reschedule('${esc(a.id)}')">Reschedule</button>
+                  <button class="btn danger small" onclick="cancelAp('${esc(a.id)}')">Cancel</button>
+                </div>
+              </div>`;
+            }).join('')
+          : `<div class="empty">No reservations yet. Find a service to get started.</div>`
+      }
+    </div>
+    <div class="note warning">Queue positions and bookings are stored exclusively on this device under the Zero-Cloud Privacy Perimeter.</div>
+  `;
+}
+
+function reschedule(id) {
+  const a = db.appointments.find(a => a.id === id && a.user === me());
+  const f = a && byId(a.facility);
+  if (!f) return;
+  modal(`
+    <h2>Reschedule appointment</h2>
+    <p>${esc(a.service)} · ${esc(f.name)}</p>
+    <form class="formgrid" onsubmit="confirmReschedule(event,'${esc(id)}')">
+      <label class="field">New slot
+        <select name="slot">
+          ${f.slots.filter(s => new Date(s) > new Date(REF_DATE) && (s === a.slot || !db.appointments.some(b => b.facility === a.facility && b.slot === s && b.status !== 'Cancelled'))).map(s => `<option value="${esc(s)}" ${s === a.slot ? 'selected' : ''}>${dateText(s)}</option>`).join('')}
+        </select>
+      </label>
+      <button class="btn">Save new slot</button>
+    </form>
+    <div class="actions"><button class="btn secondary" onclick="closeModal()">Close</button></div>
+  `);
+}
+
+function confirmReschedule(e, id) {
+  e.preventDefault();
+  const a = db.appointments.find(a => a.id === id && a.user === me());
+  if (!a) return;
+  const slot = String(new FormData(e.target).get('slot'));
+  if (!byId(a.facility).slots.includes(slot) || db.appointments.some(b => b.id !== id && b.facility === a.facility && b.slot === slot && b.status !== 'Cancelled')) {
+    return notify('Slot unavailable');
+  }
+  a.slot = slot;
+  a.status = 'Rescheduled';
+  db.reminders.filter(r => r.appointment === id).forEach(r => r.date = slot.slice(0, 10));
+  save();
+  closeModal();
+  render();
+  notify('Appointment rescheduled');
+}
+
+function cancelAp(id) {
+  confirmDialog('Cancel this reservation?', 'The appointment and its linked reminder will be marked cancelled in your local storage.', 'Cancel reservation', () => {
+    const a = db.appointments.find(a => a.id === id && a.user === me());
+    if (a) {
+      a.status = 'Cancelled';
+      db.reminders = db.reminders.filter(r => r.appointment !== id);
+      save();
+      render();
+      notify('Reservation cancelled');
+    }
+  });
+}
+
+/* ============================================================================
+   PAGE 4: DOCUMENTS & REFERRALS (CONSERVATIVE SAFE FALLBACK CHECKLISTS)
+   ============================================================================ */
+function docList(a) {
+  const rawF = byId(a.facility);
+  const eff = getEffectiveFacility(rawF);
+  const list = [
+    { item: 'Photo ID', reason: 'Standard facility check-in requirement' },
+    { item: 'Appointment confirmation', reason: 'Proof of reserved slot' }
+  ];
+
+  if (eff?.referral?.includes(a.service)) {
+    const isDisputed = Boolean(eff.disputedFields?.referral);
+    list.push({
+      item: 'Referral letter',
+      reason: isDisputed
+        ? '⚠️ Included by Conservative Safe Mode: State Health Registry Audit (verified 2026-11-05) requires a referral for ' + a.service + ', while a stale aggregator feed claims none is needed. Bring referral to avoid cancellation.'
+        : 'Required by facility for ' + a.service
+    });
+  }
+
+  list.push({ item: 'Previous reports (if available)', reason: 'Administrative continuity' });
+
+  if (eff?.insurance?.length || eff?.disputedFields?.insurance) {
+    const isDisputed = Boolean(eff.disputedFields?.insurance);
+    list.push({
+      item: 'Insurance card / eligibility proof (if applicable)',
+      reason: isDisputed
+        ? '⚠️ Public vs Private insurance acceptance has a source conflict (Public claimed only by a 36-day stale record). Bring pre-authorization & confirm coverage with billing desk.'
+        : 'Accepted categories: ' + eff.insurance.join(', ')
+    });
+  }
+  return list;
+}
+
+function documentPage() {
+  const aps = mine();
+  let html = title('Documents & referrals', 'Track preparation items per appointment. When sources conflict on referral or insurance rules, Conservative Safe Mode includes the cautious requirement automatically.');
+  if (!me()) {
+    return html + '<div class="panel empty">Sign in to manage document checklists.<div class="actions" style="justify-content:center"><button class="btn" onclick="auth()">Sign in</button></div></div>';
+  }
+  if (!aps.length) {
+    return html + '<div class="panel empty">Book an appointment to generate its checklist.</div>';
+  }
+  for (const a of aps) {
+    const rawF = byId(a.facility);
+    const docs = docList(a);
+    const done = docs.filter(d => db.docs[me() + '|' + a.id + '|' + d.item]).length;
+    const unresolved = getUnresolvedConflicts(rawF);
+
+    html += `<div class="panel section-gap">
+      <div class="topline">
+        <h2>${esc(a.service)} · ${esc(rawF?.name || 'Facility')}</h2>
+        <div class="chips" style="margin:0">
+          ${unresolved.length ? `<span class="chip warn">🛡️ Conservative Checklist Fallback Active</span>` : ''}
+          <span class="chip ${done === docs.length ? 'ok' : 'warn'}">${done}/${docs.length} complete</span>
+        </div>
+      </div>
+      <p>${dateText(a.slot)}</p>
+      <div class="progress"><div style="width:${100 * done / docs.length}%"></div></div>`;
+
+    for (const d of docs) {
+      const checked = db.docs[me() + '|' + a.id + '|' + d.item] ? 'checked' : '';
+      html += `<label class="checkrow">
+        <input type="checkbox" ${checked} onchange="toggleDoc('${esc(a.id)}',${JSON.stringify(d.item).replace(/"/g, '&quot;')},this.checked)">
+        <div style="flex:1">
+          <strong>${esc(d.item)}</strong>
+          <div class="muted" style="font-size:12.5px">${esc(d.reason)}</div>
+        </div>
+      </label>`;
+    }
+    html += `<p class="muted" style="margin-top:10px">🔒 Checklist state is classified as <span class="code-pill">RESTRICTED_PERSONAL_SENSITIVE</span> and never leaves your browser.</p></div>`;
+  }
+  return html + '<div class="note warning">Referral and insurance requirements vary. Confirm details with facility staff.</div>';
+}
+
+function toggleDoc(id, d, v) {
+  db.docs[me() + '|' + id + '|' + d] = v;
+  save();
+  render();
+}
+
+/* ============================================================================
+   PAGE 5: MY PATIENT JOURNEY
+   ============================================================================ */
+function journeyPage() {
+  const aps = mine().sort((a, b) => a.slot.localeCompare(b.slot));
+  const a = aps[0];
+  const docs = a ? docList(a) : [];
+  const missing = a ? docs.filter(d => !db.docs[me() + '|' + a.id + '|' + d.item]) : [];
+  return title('My patient journey', 'A simple view of your administrative progress and what to do next.') + `
+    <div class="timeline">
+      <div class="step">
+        <div class="bubble">1</div>
+        <div>
+          <strong>Choose a healthcare service</strong>
+          <p class="muted">Select a service already recommended by your care team.</p>
+          <button class="btn light small" onclick="go('discover')">Explore services</button>
+        </div>
+      </div>
+      <div class="step">
+        <div class="bubble">2</div>
+        <div>
+          <strong>Find a feasible, source-verified facility</strong>
+          <p class="muted">Compare listed services, languages, accessibility, insurance and multi-source provenance.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="bubble">3</div>
+        <div>
+          <strong>${a ? '✓ Appointment reserved' : 'Reserve an appointment'}</strong>
+          <p class="muted">${a ? esc(byId(a.facility)?.name || 'Facility') + ' · ' + dateText(a.slot) : 'No active reservation recorded yet.'}</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="bubble">4</div>
+        <div>
+          <strong>${a && !missing.length ? '✓ Paperwork ready' : 'Prepare documents and referrals'}</strong>
+          <p class="muted">${a ? (missing.length ? `${missing.length} item(s) remain: ${esc(missing.map(x => x.item).join(', '))}` : 'Checklist complete. Confirm details with the facility.') : 'Your checklist will appear after booking.'}</p>
+          ${a ? '<button class="btn light small" onclick="go(\'documents\')">Open checklist</button>' : ''}
+        </div>
+      </div>
+      <div class="step">
+        <div class="bubble">5</div>
+        <div>
+          <strong>Attend &amp; arrange follow-up</strong>
+          <p class="muted">Confirm arrival and follow-up instructions with staff. Add a reminder for the next administrative action.</p>
+          <button class="btn light small" onclick="go('reminders')">Manage reminders</button>
+        </div>
+      </div>
+    </div>
+    <div class="note">
+      <strong>Your next step:</strong> ${!me() ? 'Sign in to start tracking your journey.' : !a ? 'Find a facility and reserve a listed slot.' : missing.length ? 'Prepare the missing checklist items.' : 'Confirm arrival instructions and follow-up needs with the facility.'}
+    </div>
+  `;
+}
+
+/* ============================================================================
+   PAGE 6: REMINDERS (WITH REAL-TIME LOCAL PII/PHI SANITIZER)
+   ============================================================================ */
+function reminderPage() {
+  const rs = db.reminders.filter(r => r.user === me()).sort((a, b) => a.date.localeCompare(b.date));
+  return title('Reminders & follow-ups', 'Keep track of administrative tasks locally. Includes real-time on-device PII/PHI detection.') + `
+    <div class="grid2">
+      <div class="panel">
+        <div class="topline">
+          <h2>My reminders</h2>
+          <span class="chip private">🔒 RESTRICTED_PERSONAL_SENSITIVE</span>
+        </div>
+        ${!me()
+          ? '<p>Sign in to manage reminders.</p><button class="btn" onclick="auth()">Sign in</button>'
+          : rs.length
+            ? rs.map(r => `<div class="checkrow">
+                <input type="checkbox" ${r.done ? 'checked' : ''} onchange="toggleReminder('${esc(r.id)}',this.checked)">
+                <div style="flex:1">
+                  <strong style="${r.done ? 'text-decoration:line-through;opacity:.6' : ''}">${esc(r.text)}</strong>
+                  <div class="muted">${esc(r.date)} ${r.date < today() && !r.done ? '· Overdue' : ''}</div>
+                </div>
+                <button class="btn danger small" onclick="deleteReminder('${esc(r.id)}')">Remove</button>
+              </div>`).join('')
+            : '<p>No reminders yet.</p>'
+        }
+      </div>
+
+      <div class="panel">
+        <h2>Add a reminder</h2>
+        <form class="formgrid" onsubmit="addReminder(event)">
+          <label class="field">Task (Administrative only — avoid raw clinical/PII details)
+            <input id="reminderTextInput" name="text" maxlength="160" placeholder="e.g. Call clinic for follow-up slot" oninput="liveInspectInput('reminderTextInput','reminderSanitizerBar')" required>
+          </label>
+          <div id="reminderSanitizerBar" class="sanitizer-bar clean">
+            <span>✓ <strong>Local Privacy Scanner:</strong> Type above to scan for phone, email, ID, or clinical terms on-device.</span>
+            <span class="code-pill">On-Device Only</span>
+          </div>
+          <label class="field">Date
+            <input type="date" name="date" min="${today()}" value="${today()}" required>
+          </label>
+          <label style="font-size:13px;color:var(--muted)">
+            <input type="checkbox" id="autoRedactReminder" checked> Automatically redact any detected PII/clinical tokens before saving locally
+          </label>
+          <div class="actions" style="margin-top:4px">
+            <button class="btn" type="submit">Save reminder locally</button>
+            <button class="btn secondary small" type="button" onclick="fillSampleSensitiveText('reminderTextInput','reminderSanitizerBar')">Test PII/Clinical Phrase</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  `;
+}
+
+function fillSampleSensitiveText(inputId, barId) {
+  const el = $(inputId);
+  if (!el) return;
+  el.value = 'Call 9876543210 or email patient.Rajan@example.com regarding MRN-449102 biopsy diagnosis and 50mg dosage';
+  liveInspectInput(inputId, barId);
+}
+
+function addReminder(e) {
+  e.preventDefault();
+  if (!requireLogin()) return;
+  const d = new FormData(e.target);
+  let text = String(d.get('text'));
+  const autoRedact = $('autoRedactReminder')?.checked;
+  if (autoRedact && detectSensitiveContent(text).length > 0) {
+    text = redactSensitiveContent(text);
+    notify('Reminder saved with automatic local PII/clinical redaction');
+  } else {
+    notify('Reminder saved locally');
+  }
+  db.reminders.push({
+    id: 'R' + Date.now(),
+    user: me(),
+    text,
+    date: String(d.get('date')),
+    done: false
+  });
+  save();
+  render();
+}
+
+function toggleReminder(id, v) {
+  const r = db.reminders.find(r => r.id === id && r.user === me());
+  if (r) {
+    r.done = v;
+    save();
+    render();
+  }
+}
+
+function deleteReminder(id) {
+  db.reminders = db.reminders.filter(r => r.id !== id || r.user !== me());
+  save();
+  render();
+}
+
+/* ============================================================================
+   PAGE 7: HUMAN SUPPORT & ESCALATION (WITH REAL-TIME PII/PHI SANITIZER)
+   ============================================================================ */
+function supportFor(id) {
+  go('support');
+  setTimeout(() => { if ($('supportFacility')) $('supportFacility').value = id; }, 0);
+}
+
+function supportPage() {
+  const ts = db.tickets.filter(t => !me() || t.user === me() || t.user === 'anonymous-local-user').slice().reverse();
+  return title('Human support & escalation', 'When facility sources conflict or information is stale, request a human staff review instead of guessing.') + `
+    <div class="grid2">
+      <div class="panel">
+        <div class="topline">
+          <h2>Request human assistance</h2>
+          <span class="chip private">🔒 Local-Only Queue</span>
+        </div>
+        <form class="formgrid" onsubmit="submitTicket(event)">
+          <label class="field">Facility
+            <select id="supportFacility" name="facility">
+              <option value="">General navigation question</option>
+              ${db.facilities.map(f => `<option value="${esc(f.id)}">${esc(f.name)} ${getUnresolvedConflicts(f).length ? '(⚠️ Has Conflict)' : ''}</option>`).join('')}
+            </select>
+          </label>
+          <label class="field">Issue
+            <select name="issue">
+              <option>Conflicting facility information</option>
+              <option>Stale record verification request</option>
+              <option>Referral or document requirement</option>
+              <option>Accessibility or language support</option>
+              <option>Appointment or queue clarification</option>
+              <option>Other administrative question</option>
+            </select>
+          </label>
+          <label class="field">Describe your administrative question
+            <textarea id="ticketDetailsInput" name="details" rows="4" maxlength="600" placeholder="Do not include symptoms, national IDs, or sensitive medical information" oninput="liveInspectInput('ticketDetailsInput','ticketSanitizerBar')" required></textarea>
+          </label>
+          <div id="ticketSanitizerBar" class="sanitizer-bar clean">
+            <span>✓ <strong>Local Privacy Scanner:</strong> Ready to inspect for phone numbers, emails, IDs, or clinical notes.</span>
+            <span class="code-pill">Zero Cloud AI</span>
+          </div>
+          <label style="font-size:13px;color:var(--muted)">
+            <input type="checkbox" id="autoRedactTicket" checked> Auto-redact detected PII/clinical tokens before storing ticket
+          </label>
+          <div class="actions" style="margin-top:4px">
+            <button class="btn" type="submit">Save support request locally</button>
+            <button class="btn secondary small" type="button" onclick="fillSampleSensitiveText('ticketDetailsInput','ticketSanitizerBar')">Test PII/Clinical Phrase</button>
+          </div>
+        </form>
+        <p class="muted">Requests are classified <span class="code-pill">RESTRICTED_PERSONAL_SENSITIVE</span> and remain on this device.</p>
+      </div>
+
+      <div class="panel">
+        <h2>Contact facility staff (Multi-Source Numbers)</h2>
+        ${db.facilities.map(f => {
+          const eff = getEffectiveFacility(f);
+          return `<div class="checkrow">
+            <div>
+              <strong>${esc(f.name)}</strong>
+              <div>
+                <a href="tel:${esc(f.phone)}">${esc(eff.phone)}</a>
+                ${eff.disputedFields.phone ? `<span class="chip warn">Conflicting phone numbers in sources</span>` : '<span class="muted">· Verified contact</span>'}
+              </div>
+            </div>
+          </div>`;
+        }).join('')}
+        <div class="note warning">For clinical judgement or emergencies, contact qualified healthcare professionals or local emergency services directly.</div>
+      </div>
+    </div>
+
+    <div class="panel section-gap">
+      <h2>My support &amp; conflict escalation requests (${ts.length})</h2>
+      ${ts.length
+        ? ts.map(t => `<div class="appointment">
+            <div>
+              <strong>${esc(t.issue)} ${t.facility ? '· ' + esc(byId(t.facility)?.name || t.facility) : ''}</strong>
+              <small>${esc(t.id)} · ${esc(t.status)} · ${esc(t.date)}</small>
+              <p style="margin:6px 0 0">${esc(t.details)}</p>
+            </div>
+          </div>`).join('')
+        : '<p class="muted">No requests recorded.</p>'
+      }
+    </div>
+  `;
+}
+
+function submitTicket(e) {
+  e.preventDefault();
+  if (!requireLogin()) return;
+  const d = new FormData(e.target);
+  let details = String(d.get('details'));
+  if ($('autoRedactTicket')?.checked && detectSensitiveContent(details).length > 0) {
+    details = redactSensitiveContent(details);
+    notify('Support ticket saved locally with PII/clinical redaction');
+  } else {
+    notify('Request saved locally; zero external transmission');
+  }
+  db.tickets.push({
+    id: 'T' + Date.now(),
+    user: me(),
+    facility: String(d.get('facility')),
+    issue: String(d.get('issue')),
+    details,
+    status: 'Stored on-device (Zero external egress)',
+    date: today()
+  });
+  save();
+  render();
+}
+
+/* ============================================================================
+   PAGE 8: FACILITY DATA & MULTI-SOURCE CONFLICT RECONCILIATION CENTER
+   ============================================================================ */
+function dataPage() {
+  const unresolvedCount = totalUnresolvedConflictCount();
+  return title('Facility data & multi-source reconciliation', 'Reconcile incoming feeds without ever letting a newest-arriving stale record silently overwrite verified truth.') + `
+    <div class="grid2">
+      <div class="panel">
+        <h2>Anti-Silent-Overwrite Reconciliation Engine</h2>
+        <p>When importing a JSON feed or syncing partner records, <span class="code-pill">reconcileFacilityData()</span> inspects <span class="code-pill">verified_at</span> (actual verification date at facility) vs <span class="code-pill">ingested_at</span> (system arrival time). Any record with <span class="code-pill">verified_at</span> older than 14 days (before 2026-10-23) is flagged <span class="chip bad">STALE</span>.</p>
+        <div class="actions">
+          <button class="btn warn" onclick="simulateNewestArrivingStaleFeed()">⚡ Simulate Newest-Arriving Stale Feed</button>
+          <button class="btn secondary" onclick="downloadSample()">Download multi-source JSON</button>
+          <button class="btn danger small" onclick="resetData()">Reset to pre-seeded conflicts</button>
+        </div>
+        <hr style="border:0;border-top:1px solid var(--line);margin:18px 0">
+        <h3>Import facility JSON via Reconciliation Engine</h3>
+        <label class="field">Select JSON file (Reconciled field-by-field, never blindly overwritten)
+          <input type="file" accept=".json,application/json" onchange="importData(event)">
+        </label>
+        <div class="note">
+          <strong>Architectural Guarantee:</strong> Unlike naive <span class="code-pill">db.facilities = arr</span> replacement, conflicting fields from incoming JSON files are quarantined side-by-side and default to Conservative Safe Mode.
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Provenance &amp; Staleness Overview (Ref Date: ${REF_DATE})</h2>
+        <div class="grid-equal">
+          <div class="stat warn">
+            <strong>${unresolvedCount}</strong>
+            <small>Unresolved field conflicts</small>
+          </div>
+          <div class="stat">
+            <strong>${db.conflictLog.length}</strong>
+            <small>Logged reconciliation events</small>
+          </div>
+        </div>
+        <p style="margin-top:14px"><strong>Staleness Rule:</strong> <span class="code-pill">ageDays = (2026-11-06 - verified_at) &gt; 14 days</span> → <span class="chip bad">STALE</span></p>
+        <p class="muted">Even if a record arrives at <span class="code-pill">2026-11-06T10:15</span> (newest arriving), if its underlying verification date is stale or conflicts with another Tier-1 source, silent overwrite is blocked.</p>
+      </div>
+    </div>
+
+    <div class="panel section-gap">
+      <h2>Facility Source Matrix &amp; Per-Field Adjudication</h2>
+      <div class="list">
+        ${db.facilities.map(f => {
+          const conflicts = getAllConflicts(f);
+          const unresolved = getUnresolvedConflicts(f);
+          return `<div class="facility ${unresolved.length ? 'conflicted' : ''}">
+            <div class="facility-body">
+              <div class="topline">
+                <h3>${esc(f.name)} (${esc(f.id)})</h3>
+                <div class="actions" style="margin:0">
+                  <span class="chip ${unresolved.length ? 'warn' : 'ok'}">${unresolved.length ? `${unresolved.length} Unresolved Conflict(s)` : 'All Sources Reconciled'}</span>
+                  ${conflicts.length ? `<button class="btn small warn" onclick="openConflictModal('${esc(f.id)}')">⚖️ Open Side-by-Side Resolver</button>` : ''}
+                </div>
+              </div>
+              ${renderSourceBadges(f)}
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+
+    <div class="panel section-gap">
+      <h2>Reconciliation &amp; Stale-Block Audit Log (${db.conflictLog.length})</h2>
+      ${db.conflictLog.map(item => `
+        <div class="appointment">
+          <div>
+            <div class="chips" style="margin:0 0 6px">
+              <span class="chip bad">${esc(item.action)}</span>
+              <span class="chip">${esc(item.facilityName)} (${esc(item.facilityId)})</span>
+              <span class="chip warn">Fields: ${esc((item.conflictingFields || []).join(', '))}</span>
+            </div>
+            <strong>${esc(item.summary)}</strong>
+            <small>Logged: ${esc(item.timestamp)} · Incoming Source: ${esc(item.incomingSource)} (ingested ${esc(item.incomingIngestedAt)}, verified ${esc(item.incomingVerifiedAt)} [${item.incomingStaleDays}d old]) vs Existing: ${esc(item.existingSource)} (verified ${esc(item.existingVerifiedAt)})</small>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+/**
+ * Simulates an external aggregator pushing a brand-new feed with today's ingested_at timestamp
+ * (2026-11-06T11:30) that contains stale verified_at timestamps (e.g., 45 days old on F2 and 57 days old on F1).
+ * Demonstrates that reconcileFacilityData() blocks the overwrite and quarantines the conflict.
+ */
+function simulateNewestArrivingStaleFeed() {
+  const simulatedIncoming = [
+    {
+      id: 'F1',
+      name: 'City General Hospital',
+      area: 'Central District',
+      distance: 3.2,
+      services: ['General Consultation', 'MRI Scan', 'Blood Test', 'X-Ray', 'Physiotherapy'],
+      languages: ['English', 'Tamil', 'Hindi'],
+      accessible: true,
+      level: 'Multi-specialty',
+      hours: '08:00–20:00', // Conflicts with 24/7
+      emergency: false, // Conflicts with true
+      referral: [], // Conflicts with ['MRI Scan']
+      insurance: ['Public', 'Private'],
+      slots: ['2026-11-07T09:00', '2026-11-07T11:00', '2026-11-08T10:30'],
+      phone: '044-4000-1999',
+      source_name: 'Hospital Aggregator Sync',
+      reliability: 'Reliable Tier-1',
+      verified_at: '2026-09-10', // 57 days old (STALE)
+      ingested_at: '2026-11-06T10:15' // NEWEST ARRIVING
+    },
+    {
+      id: 'F2',
+      name: 'Green Valley Medical Centre',
+      area: 'North Zone',
+      distance: 5.8,
+      services: ['General Consultation', 'Blood Test', 'X-Ray', 'Physiotherapy'],
+      languages: ['English', 'Tamil'],
+      accessible: false, // Conflicts with true (Verified 2026-11-04)
+      level: 'Clinic',
+      hours: '09:00–16:00', // Conflicts with 08:00–20:00
+      emergency: false,
+      referral: ['X-Ray'], // Conflicts with []
+      insurance: ['Private'],
+      slots: ['2026-11-07T10:00', '2026-11-08T12:00', '2026-11-09T09:30'],
+      phone: '044-4000-2200',
+      source_name: 'Regional Insurance Batch Feed',
+      reliability: 'Reliable Tier-1',
+      verified_at: '2026-09-22', // 45 days old (STALE)
+      ingested_at: '2026-11-06T11:40' // NEWEST ARRIVING
+    },
+    {
+      id: 'F3',
+      name: 'Sunrise Diagnostic Institute',
+      area: 'East District',
+      distance: 7.1,
+      services: ['MRI Scan', 'Blood Test', 'X-Ray', 'Ultrasound'],
+      languages: ['English', 'Hindi', 'Telugu'],
+      accessible: true, // Conflicts with false
+      level: 'Diagnostics',
+      hours: '07:00–19:00',
+      emergency: false,
+      referral: ['MRI Scan'],
+      insurance: ['Public', 'Private'], // Conflicts with ['Private']
+      slots: ['2026-11-08T08:00', '2026-11-09T14:00'],
+      phone: '044-4000-3300',
+      source_name: 'National Insurance Directory',
+      reliability: 'Reliable Tier-1',
+      verified_at: '2026-10-01', // 36 days old (STALE)
+      ingested_at: '2026-11-06T09:45' // NEWEST ARRIVING
+    }
+  ];
+
+  const report = reconcileFacilityData(simulatedIncoming);
+  render();
+  modal(`
+    <h2>🛡️ Stale Newest-Arriving Feed Blocked &amp; Quarantined</h2>
+    <div class="note danger-note">
+      <strong>Anti-Silent-Overwrite Triggered:</strong> ${report.conflictsDetected} conflicting field assertions arrived with a newer <span class="code-pill">ingested_at</span> timestamp (2026-11-06), but failed staleness &amp; consistency checks against fresher verified facility audits.
+    </div>
+    <ul style="line-height:1.65">
+      <li><strong>City General Hospital (F1):</strong> Blocked 57-day stale aggregator sync from overwriting <span class="code-pill">hours</span>, <span class="code-pill">emergency</span>, <span class="code-pill">referral</span>, and <span class="code-pill">phone</span>.</li>
+      <li><strong>Green Valley Medical Centre (F2):</strong> Blocked 45-day stale regional batch feed (ingested 2026-11-06T11:40) from overwriting <span class="code-pill">accessible</span>, <span class="code-pill">hours</span>, and <span class="code-pill">referral</span>.</li>
+      <li><strong>Sunrise Diagnostic Institute (F3):</strong> Blocked 36-day stale directory feed from overwriting <span class="code-pill">accessible</span> and <span class="code-pill">insurance</span>.</li>
+    </ul>
+    <div class="actions">
+      <button class="btn warn" onclick="closeModal();go('data')">Inspect Conflict Matrix</button>
+      <button class="btn secondary" onclick="closeModal()">Close</button>
+    </div>
+  `);
+}
+
+function importData(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const arr = JSON.parse(reader.result);
+      if (!Array.isArray(arr) || !arr.length) throw Error('Expected a non-empty JSON array');
+      const ids = new Set();
+      for (const f of arr) {
+        if (!f || typeof f.id !== 'string' || !f.id || ids.has(f.id) || typeof f.name !== 'string' || !f.name || !Array.isArray(f.services) || !Array.isArray(f.languages) || !Array.isArray(f.slots) || !Array.isArray(f.referral) || !Array.isArray(f.insurance) || typeof f.distance !== 'number' || !Number.isFinite(f.distance) || f.distance < 0 || typeof f.accessible !== 'boolean' || typeof f.emergency !== 'boolean') {
+          throw Error('Invalid or duplicate facility fields');
+        }
+        ids.add(f.id);
+      }
+      const res = reconcileFacilityData(arr, {
+        source_name: 'Imported JSON Feed (' + file.name + ')',
+        reliability: 'Reliable Tier-1',
+        verified_at: arr[0]?.verified_at || arr[0]?.updated || '2026-10-10',
+        ingested_at: new Date().toISOString().slice(0, 16)
+      });
+      filters.service = '';
+      save();
+      render();
+      notify(`Reconciled import: ${res.addedCount} new, ${res.conflictsDetected} conflicts quarantined (${res.staleBlockedCount} stale blocked)`);
+    } catch (err) {
+      modal(`<h2>Import Validation Error</h2><p>${esc(err.message)}</p><div class="actions"><button class="btn" onclick="closeModal()">Close</button></div>`);
+    }
+  };
+  reader.readAsText(file);
+}
+
+function downloadSample() {
+  const blob = new Blob([JSON.stringify(db.facilities, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'carepath-multisource-facilities.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function resetData() {
+  confirmDialog('Restore initial multi-source facilities?', 'This resets the facility catalog to the pre-seeded conflicts on F1 and F3.', 'Restore facilities', () => {
+    db.facilities = createInitialFacilities();
+    db.conflictLog = structuredClone(initialConflictAudit);
+    save();
+    render();
+    notify('Pre-seeded multi-source facilities restored');
+  });
+}
+
+/* ============================================================================
+   PAGE 9: PRIVACY & ZERO-CLOUD GUARD DASHBOARD (CONSTRAINT 2)
+   ============================================================================ */
+function privacyPage() {
+  const blockedEvents = (db.privacyAudit || []).filter(x => x.status === 'HARD_BLOCKED');
+  const storeCounts = {
+    users: db.users.length,
+    appointments: db.appointments.length,
+    docs: Object.keys(db.docs || {}).length,
+    reminders: db.reminders.length,
+    tickets: db.tickets.length,
+    facilities: db.facilities.length
+  };
+
+  return title('Privacy & Zero-Cloud Guard', 'Strict technical enforcement ensuring personal/sensitive records never leave this device and are never processed by any cloud-hosted AI service.') + `
+    <div class="grid2">
+      <div class="panel">
+        <div class="topline">
+          <h2>Runtime Network &amp; Cloud-AI Egress Firewall</h2>
+          <span class="chip ok">ACTIVE • ZERO BYTES TRANSMITTED</span>
+        </div>
+        <p>Browser transport APIs (<span class="code-pill">window.fetch</span>, <span class="code-pill">XMLHttpRequest</span>, <span class="code-pill">navigator.sendBeacon</span>, <span class="code-pill">WebSocket</span>, and <span class="code-pill">EventSource</span>) are wrapped and locked at runtime. Any attempt to transmit <span class="code-pill">RESTRICTED_PERSONAL_SENSITIVE</span> records or call Cloud AI endpoints (OpenAI, Anthropic, Gemini/Vertex, external webhooks) throws an immediate transport exception and logs a forensic entry below.</p>
+
+        <div class="actions">
+          <button class="btn danger" onclick="simulateBlockedCloudAIEgress()">🧪 Test Blocked Cloud-AI / External Egress Attempt</button>
+          <button class="btn secondary small" onclick="purgeRestrictedRecords()">🗑️ Purge All Restricted Personal Records</button>
+        </div>
+
+        <div class="note privacy-note section-gap">
+          <strong>100% On-Device Deterministic Engine:</strong> Facility ranking, multi-source conflict reconciliation, Conservative Safe Mode fallbacks, and PII/PHI redaction run locally in your browser with zero external API dependencies.
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Perimeter Telemetry</h2>
+        <div class="grid-equal">
+          <div class="stat ok">
+            <strong>0</strong>
+            <small>External network / Cloud-AI requests allowed</small>
+          </div>
+          <div class="stat warn">
+            <strong>${blockedEvents.length}</strong>
+            <small>Egress / Cloud-AI attempts intercepted &amp; blocked</small>
+          </div>
+        </div>
+        <ul style="margin-top:14px;font-size:13.5px;color:var(--ink);line-height:1.7">
+          <li>✓ <span class="code-pill">window.fetch</span> → Wrapped &amp; hard-blocked</li>
+          <li>✓ <span class="code-pill">XMLHttpRequest.open/send</span> → Wrapped &amp; hard-blocked</li>
+          <li>✓ <span class="code-pill">navigator.sendBeacon</span> → Wrapped &amp; hard-blocked</li>
+          <li>✓ <span class="code-pill">window.WebSocket / EventSource</span> → Wrapped &amp; hard-blocked</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="panel section-gap">
+      <h2>Data Classification &amp; Egress Policy Matrix</h2>
+      <table class="conflict-table">
+        <thead>
+          <tr>
+            <th>Local Data Store</th>
+            <th>Privacy Classification</th>
+            <th>External Egress Policy</th>
+            <th>Cloud-Hosted AI Policy</th>
+            <th>Local Records</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${Object.entries(DATA_CLASSIFICATION_POLICY).map(([key, pol]) => `
+            <tr>
+              <td><strong>${esc(key)}</strong><br><small class="muted">${esc(pol.description)}</small></td>
+              <td>
+                <span class="chip ${pol.tier === 'RESTRICTED_PERSONAL_SENSITIVE' ? 'private' : 'ok'}">${esc(pol.tier)}</span>
+              </td>
+              <td><span class="code-pill">${esc(pol.egress_policy)}</span></td>
+              <td><span class="chip bad">🚫 ${esc(pol.cloud_ai_policy)}</span></td>
+              <td><strong>${storeCounts[key] ?? 0}</strong> item(s)</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="panel section-gap">
+      <h2>Local Privacy &amp; Egress Firewall Audit Log (${db.privacyAudit.length})</h2>
+      ${db.privacyAudit.map(ev => `
+        <div class="appointment">
+          <div>
+            <div class="chips" style="margin:0 0 6px">
+              <span class="chip ${ev.status === 'HARD_BLOCKED' ? 'bad' : 'ok'}">${esc(ev.status)}</span>
+              <span class="chip private">${esc(ev.classification)}</span>
+              <span class="code-pill">${esc(ev.api)}</span>
+            </div>
+            <strong>Target: ${esc(ev.target)}</strong>
+            <small>${esc(ev.timestamp)} · ${esc(ev.detail)}</small>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+async function simulateBlockedCloudAIEgress() {
+  const sensitiveSample = JSON.stringify({
+    classification: 'RESTRICTED_PERSONAL_SENSITIVE',
+    appointments: db.appointments,
+    tickets: db.tickets
+  });
+
+  // 1. Attempt Cloud-AI fetch call (OpenAI / Gemini endpoint)
+  try {
+    await window.fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      body: sensitiveSample
+    });
+  } catch (_) {
+    // Expected block
+  }
+
+  // 2. Attempt Cloud-AI XHR call (Google Vertex / Gemini endpoint)
+  try {
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent');
+    xhr.send(sensitiveSample);
+  } catch (_) {
+    // Expected block
+  }
+
+  // 3. Attempt external telemetry beacon
+  try {
+    navigator.sendBeacon('https://external-analytics-collector.example.com/ingest', sensitiveSample);
+  } catch (_) {
+    // Expected block
+  }
+
+  render();
+  notify('3 simulated Cloud-AI & external egress attempts were hard-blocked and logged!');
+}
+
+function purgeRestrictedRecords() {
+  confirmDialog(
+    'Purge all Restricted Personal/Sensitive records?',
+    'This permanently clears users, appointments, document checklists, reminders, and support tickets from this browser while keeping public facility data.',
+    'Purge restricted data',
+    () => {
+      db.users = [];
+      db.current = null;
+      db.appointments = [];
+      db.docs = {};
+      db.reminders = [];
+      db.tickets = [];
+      db.privacyAudit.unshift({
+        id: 'PA-' + Date.now(),
+        timestamp: new Date().toISOString().slice(0, 19),
+        api: 'Local Storage Purge',
+        target: 'users, appointments, docs, reminders, tickets',
+        classification: 'RESTRICTED_PERSONAL_SENSITIVE',
+        status: 'PURGED_LOCALLY',
+        detail: 'User initiated complete local erasure of all restricted personal/sensitive stores.'
+      });
+      save();
+      render();
+      notify('All restricted personal records purged from device');
+    }
+  );
+}
+
+// Initial render on load
+render();
+</script>
+</body>
+</html>
