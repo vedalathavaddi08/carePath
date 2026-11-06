@@ -1,180 +1,3 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>CarePath | Patient Journey Navigator</title>
-<style>
-:root{
-  --ink:#17344b;
-  --muted:#647b8d;
-  --blue:#176bdb;
-  --aqua:#14b8a6;
-  --bg:#f3f8fc;
-  --line:#dce8f0;
-  --white:#fff;
-  --orange:#f6a23c;
-  --red:#c93b2b;
-  --purple:#6d28d9;
-  --amber-bg:#fff8eb;
-  --amber-line:#f5d08a;
-  --danger-bg:#fff1f0;
-  --danger-line:#f6c3be;
-  --ok-bg:#e2f8ef;
-  --ok-ink:#087c60;
-}
-*{box-sizing:border-box}
-body{margin:0;background:var(--bg);font:15px/1.5 Inter,Segoe UI,Arial,sans-serif;color:var(--ink)}
-button,input,select,textarea{font:inherit}
-button{cursor:pointer;transition:all .15s ease}
-button:disabled{opacity:.45;cursor:not-allowed}
-header{min-height:74px;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:10px max(22px,5vw);position:sticky;top:0;z-index:20;gap:12px;flex-wrap:wrap}
-.brand{font-weight:850;font-size:24px;color:#105dba;display:flex;align-items:center;gap:8px}
-.brand span{color:#0cae9c}
-.header-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.guard-pill{display:inline-flex;align-items:center;gap:6px;background:#e6f7f2;border:1px solid #9ee0cb;color:#08664e;padding:6px 11px;border-radius:999px;font-size:12px;font-weight:750;cursor:pointer}
-.guard-pill.conflict{background:#fff4e0;border-color:#f3c478;color:#8e5206}
-.shell{display:grid;grid-template-columns:255px minmax(0,1fr);min-height:calc(100vh - 74px)}
-aside{background:white;border-right:1px solid var(--line);padding:20px 14px;display:flex;flex-direction:column;justify-content:space-between}
-aside button{display:flex;align-items:center;justify-content:space-between;width:100%;text-align:left;background:transparent;border:0;padding:12px 14px;border-radius:12px;color:#52697b;margin:3px 0;font-weight:650}
-aside button.active,aside button:hover{background:#eaf4ff;color:#1269c8}
-.nav-badge{font-size:11px;padding:2px 7px;border-radius:99px;font-weight:800;background:#fff0d6;color:#9a5b08}
-.nav-badge.ok{background:#e2f8ef;color:#087c60}
-.perimeter-box{margin-top:16px;padding:13px;border-radius:14px;background:#f4fbf8;border:1px solid #c2eadb;font-size:12px;color:#165a47}
-.perimeter-box strong{display:block;color:#094837;margin-bottom:4px}
-main{padding:30px max(22px,4vw);max-width:1450px;width:100%;margin:auto}
-.hero{background:linear-gradient(110deg,#0d58ac,#147bcb 58%,#15b9b1);color:white;padding:30px;border-radius:22px;display:flex;justify-content:space-between;align-items:center;gap:20px;overflow:hidden}
-.hero h1{font-size:31px;line-height:1.15;margin:7px 0}
-.hero p{max-width:620px;color:#e4f4ff;margin:8px 0}
-.hero-art{font-size:80px;filter:drop-shadow(0 10px 15px #003d7655);animation:float 4s ease-in-out infinite}
-@keyframes float{50%{transform:translateY(-10px)}}
-.eyebrow{text-transform:uppercase;letter-spacing:2px;font-size:11px;font-weight:800}
-.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin:22px 0}
-.stat,.panel,.facility,.step{background:white;border:1px solid var(--line);border-radius:17px;padding:20px;box-shadow:0 4px 16px #16466b06}
-.stat strong{font-size:28px;display:block;color:#146cc9}
-.stat.warn strong{color:#b86209}
-.stat.ok strong{color:#087c60}
-.stat small,.muted{color:var(--muted)}
-.grid2{display:grid;grid-template-columns:1.35fr 1fr;gap:20px}
-.grid-equal{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-.panel h2,.section-title{font-size:20px;margin:0 0 14px}
-.panel h3{margin:0 0 10px}
-.panel p{color:var(--muted)}
-.btn{background:var(--blue);border:1px solid var(--blue);border-radius:10px;color:white;padding:10px 16px;font-weight:700;display:inline-flex;align-items:center;gap:6px}
-.btn.secondary{background:#fff;color:var(--blue)}
-.btn.light{background:#e8f4ff;color:#146ac3;border-color:#e8f4ff}
-.btn.warn{background:#fff4e0;color:#8e5206;border-color:#f3c478}
-.btn.ok{background:#0d9488;color:#fff;border-color:#0d9488}
-.btn.danger{background:#fff0ef;border-color:#f5c9c5;color:#b63329}
-.btn.small{padding:7px 11px;font-size:13px}
-.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:14px}
-.field{display:flex;flex-direction:column;gap:6px;font-weight:650;font-size:13px;color:#496174}
-.field input,.field select,.field textarea{padding:11px 12px;border:1px solid #cfdee9;border-radius:10px;background:#fff;color:var(--ink);width:100%;min-width:0}
-.field input:focus,.field select:focus,.field textarea:focus{outline:2px solid #99c9ff}
-.filters{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
-.full{grid-column:1/-1}
-.list{display:grid;gap:16px}
-.facility{display:flex;gap:16px;align-items:flex-start;transition:border-color .2s}
-.facility.conflicted{border:2px solid #f0a83e;background:linear-gradient(to bottom,#fffdf9,#ffffff)}
-.facility-icon{font-size:33px;background:#eaf6ff;border-radius:14px;padding:13px}
-.facility-body{flex:1;min-width:0}
-.facility h3{margin:0}
-.facility .meta{color:var(--muted);font-size:13px;margin:5px 0}
-.chips{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
-.chip{background:#edf5fb;color:#376580;padding:5px 10px;border-radius:100px;font-size:12px;font-weight:650;display:inline-flex;align-items:center;gap:4px}
-.chip.ok{background:#e2f8ef;color:#087c60}
-.chip.warn{background:#fff1db;color:#9a650f;border:1px solid #f5d08a}
-.chip.bad{background:#ffeded;color:#ad3636;border:1px solid #f5c2c2}
-.chip.private{background:#f3e8ff;color:#6b21a8;border:1px solid #d8b4fe}
-.topline{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
-.page-title{font-size:27px;margin:0 0 5px}
-.page-sub{color:var(--muted);margin:0 0 24px}
-.empty{text-align:center;padding:35px;color:var(--muted)}
-.appointment{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:16px;border:1px solid var(--line);border-radius:12px;margin:10px 0}
-.appointment strong{display:block}
-.appointment small{color:var(--muted)}
-.checkrow{display:flex;gap:10px;align-items:center;padding:12px;border-bottom:1px solid #edf2f6}
-.checkrow input{width:18px;height:18px;accent-color:#0aa78f}
-.timeline{display:grid;gap:13px}
-.step{display:flex;gap:14px;align-items:flex-start}
-.bubble{width:34px;height:34px;display:grid;place-items:center;background:#e5f4ff;color:#166ac5;border-radius:50%;font-weight:800;flex:none}
-.note{background:#eef7ff;border-left:4px solid #2885e4;padding:12px 15px;border-radius:8px;color:#315773;margin:12px 0;font-size:13.5px}
-.warning{background:#fff6e8;border-left-color:#f0a12e;color:#6e4305}
-.danger-note{background:#fff1f0;border-left-color:#d93829;color:#7a1c14}
-.privacy-note{background:#f0fdf4;border-left-color:#15803d;color:#14532d}
-.conflict-box{background:var(--amber-bg);border:1px solid var(--amber-line);border-radius:14px;padding:14px 16px;margin:12px 0}
-.conflict-box h4{margin:0 0 8px;color:#854d0e;font-size:14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
-.source-compare{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px;margin-top:10px}
-.source-card{background:#fff;border:1px solid #e2e8f0;border-radius:11px;padding:11px 13px;font-size:12.5px}
-.source-card.stale{border-color:#f59e0b;background:#fffbeb}
-.source-card.fresh{border-color:#10b981;background:#f0fdf4}
-.source-card strong{display:block;font-size:13px;color:var(--ink)}
-.conflict-table{width:100%;border-collapse:collapse;font-size:13px;margin-top:10px;background:#fff;border-radius:10px;overflow:hidden;border:1px solid var(--line)}
-.conflict-table th,.conflict-table td{padding:10px 12px;text-align:left;border-bottom:1px solid #edf2f6;vertical-align:top}
-.conflict-table th{background:#f8fafc;color:#475569;font-weight:750;font-size:12px;text-transform:uppercase;letter-spacing:.4px}
-.overlay{position:fixed;inset:0;background:#09253a99;z-index:40;display:grid;place-items:center;padding:15px}
-.modal{background:white;border-radius:20px;padding:26px;width:min(760px,100%);max-height:90vh;overflow:auto;box-shadow:0 22px 65px #061b3455}
-.modal h2{margin:0 0 10px}
-.formgrid{display:grid;gap:13px}
-.hidden{display:none!important}
-.toast{position:fixed;bottom:22px;right:22px;background:#153e5e;color:white;padding:13px 18px;border-radius:12px;z-index:60;box-shadow:0 10px 30px #0003;max-width:420px}
-.section-gap{margin-top:22px}
-.soft{background:#f5faff;padding:14px;border-radius:12px}
-.progress{height:8px;background:#e5eef5;border-radius:8px;overflow:hidden;margin:12px 0}
-.progress div{height:100%;background:#12b69e;transition:width .3s}
-.fade{animation:appear .25s ease}
-.code-pill{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:12px;background:#f1f5f9;padding:2px 6px;border-radius:6px;color:#0f172a}
-.sanitizer-bar{background:#fefce8;border:1px solid #fde047;border-radius:10px;padding:10px 12px;font-size:12.5px;color:#713f12;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
-.sanitizer-bar.clean{background:#f0fdf4;border-color:#bbf7d0;color:#166534}
-@keyframes appear{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
-@media(max-width:960px){
-  .shell{grid-template-columns:1fr}
-  aside{display:flex;flex-direction:row;overflow:auto;padding:9px;border-bottom:1px solid var(--line);border-right:0}
-  aside button{width:auto;white-space:nowrap;gap:8px}
-  .perimeter-box{display:none}
-  .stats{grid-template-columns:repeat(2,1fr)}
-  .grid2,.grid-equal{grid-template-columns:1fr}
-  .filters{grid-template-columns:repeat(2,minmax(0,1fr))}
-}
-@media(max-width:550px){
-  header{padding:10px 14px}
-  .brand{font-size:20px}
-  .hero{padding:22px}
-  .hero h1{font-size:24px}
-  .hero-art{display:none}
-  .stats{gap:8px}
-  .stat{padding:13px}
-  .filters{grid-template-columns:1fr}
-  .facility{flex-direction:column}
-  .appointment{align-items:flex-start;flex-direction:column}
-  main{padding:18px 12px}
-}
-</style>
-</head>
-<body>
-<header>
-  <div class="brand">✚ Care<span>Path</span></div>
-  <div class="header-right">
-    <span id="conflictHeaderPill" class="guard-pill conflict" onclick="go('data')" title="Inspect multi-source conflicts & stale record protection"></span>
-    <span id="privacyHeaderPill" class="guard-pill" onclick="go('privacy')" title="Inspect Local-Only Privacy Perimeter & Runtime Egress Firewall"></span>
-    <small class="muted">Administrative navigation • Not medical advice</small>
-    <button id="accountBtn" class="btn secondary small" onclick="accountAction()">Sign in</button>
-  </div>
-</header>
-<div class="shell">
-  <aside>
-    <div id="nav"></div>
-    <div class="perimeter-box">
-      <strong>🔒 Local-Only Privacy Guard</strong>
-      Restricted PII/PHI never leaves this device. Cloud AI &amp; external network calls are hard-blocked at runtime.
-    </div>
-  </aside>
-  <main id="app" class="fade"></main>
-</div>
-<div id="modalRoot"></div>
-<div id="toastRoot"></div>
-
-<script>
 'use strict';
 
 /* ============================================================================
@@ -1204,8 +1027,7 @@ function render() {
     ['journey', '⇢', 'My journey', ''],
     ['reminders', '◷', 'Reminders', ''],
     ['support', '♧', 'Human support', ''],
-    ['data', '▤', 'Facility data & conflicts', unresolvedCount ? `<span class="nav-badge">${unresolvedCount}</span>` : `<span class="nav-badge ok">OK</span>`],
-    ['privacy', '🛡️', 'Privacy & Zero-Cloud', `<span class="nav-badge ok">${blockedCount} blocked</span>`]
+    ['data', '▤', 'Facility data & conflicts', unresolvedCount ? `<span class="nav-badge">${unresolvedCount}</span>` : `<span class="nav-badge ok">OK</span>`]
   ];
   $('nav').innerHTML = items.map(([id, ic, label, badge]) =>
     `<button class="${page === id ? 'active' : ''}" onclick="go('${id}')"><span>${ic} &nbsp; ${label}</span>${badge}</button>`
@@ -2269,10 +2091,6 @@ function dataPage() {
           <button class="btn danger small" onclick="resetData()">Reset to pre-seeded conflicts</button>
         </div>
         <hr style="border:0;border-top:1px solid var(--line);margin:18px 0">
-        <h3>Import facility JSON via Reconciliation Engine</h3>
-        <label class="field">Select JSON file (Reconciled field-by-field, never blindly overwritten)
-          <input type="file" accept=".json,application/json" onchange="importData(event)">
-        </label>
         <div class="note">
           <strong>Architectural Guarantee:</strong> Unlike naive <span class="code-pill">db.facilities = arr</span> replacement, conflicting fields from incoming JSON files are quarantined side-by-side and default to Conservative Safe Mode.
         </div>
@@ -2290,8 +2108,7 @@ function dataPage() {
             <small>Logged reconciliation events</small>
           </div>
         </div>
-        <p style="margin-top:14px"><strong>Staleness Rule:</strong> <span class="code-pill">ageDays = (2026-11-06 - verified_at) &gt; 14 days</span> → <span class="chip bad">STALE</span></p>
-        <p class="muted">Even if a record arrives at <span class="code-pill">2026-11-06T10:15</span> (newest arriving), if its underlying verification date is stale or conflicts with another Tier-1 source, silent overwrite is blocked.</p>
+        <p style="margin-top:14px"><strong>Staleness Rule:</strong> <span class="code-pill"> <span> → <span class="chip bad">STALE</span></p>
       </div>
     </div>
 
@@ -2474,10 +2291,6 @@ function resetData() {
     notify('Pre-seeded multi-source facilities restored');
   });
 }
-
-/* ============================================================================
-   PAGE 9: PRIVACY & ZERO-CLOUD GUARD DASHBOARD (CONSTRAINT 2)
-   ============================================================================ */
 function privacyPage() {
   const blockedEvents = (db.privacyAudit || []).filter(x => x.status === 'HARD_BLOCKED');
   const storeCounts = {
@@ -2489,92 +2302,7 @@ function privacyPage() {
     facilities: db.facilities.length
   };
 
-  return title('Privacy & Zero-Cloud Guard', 'Strict technical enforcement ensuring personal/sensitive records never leave this device and are never processed by any cloud-hosted AI service.') + `
-    <div class="grid2">
-      <div class="panel">
-        <div class="topline">
-          <h2>Runtime Network &amp; Cloud-AI Egress Firewall</h2>
-          <span class="chip ok">ACTIVE • ZERO BYTES TRANSMITTED</span>
-        </div>
-        <p>Browser transport APIs (<span class="code-pill">window.fetch</span>, <span class="code-pill">XMLHttpRequest</span>, <span class="code-pill">navigator.sendBeacon</span>, <span class="code-pill">WebSocket</span>, and <span class="code-pill">EventSource</span>) are wrapped and locked at runtime. Any attempt to transmit <span class="code-pill">RESTRICTED_PERSONAL_SENSITIVE</span> records or call Cloud AI endpoints (OpenAI, Anthropic, Gemini/Vertex, external webhooks) throws an immediate transport exception and logs a forensic entry below.</p>
-
-        <div class="actions">
-          <button class="btn danger" onclick="simulateBlockedCloudAIEgress()">🧪 Test Blocked Cloud-AI / External Egress Attempt</button>
-          <button class="btn secondary small" onclick="purgeRestrictedRecords()">🗑️ Purge All Restricted Personal Records</button>
-        </div>
-
-        <div class="note privacy-note section-gap">
-          <strong>100% On-Device Deterministic Engine:</strong> Facility ranking, multi-source conflict reconciliation, Conservative Safe Mode fallbacks, and PII/PHI redaction run locally in your browser with zero external API dependencies.
-        </div>
-      </div>
-
-      <div class="panel">
-        <h2>Perimeter Telemetry</h2>
-        <div class="grid-equal">
-          <div class="stat ok">
-            <strong>0</strong>
-            <small>External network / Cloud-AI requests allowed</small>
-          </div>
-          <div class="stat warn">
-            <strong>${blockedEvents.length}</strong>
-            <small>Egress / Cloud-AI attempts intercepted &amp; blocked</small>
-          </div>
-        </div>
-        <ul style="margin-top:14px;font-size:13.5px;color:var(--ink);line-height:1.7">
-          <li>✓ <span class="code-pill">window.fetch</span> → Wrapped &amp; hard-blocked</li>
-          <li>✓ <span class="code-pill">XMLHttpRequest.open/send</span> → Wrapped &amp; hard-blocked</li>
-          <li>✓ <span class="code-pill">navigator.sendBeacon</span> → Wrapped &amp; hard-blocked</li>
-          <li>✓ <span class="code-pill">window.WebSocket / EventSource</span> → Wrapped &amp; hard-blocked</li>
-        </ul>
-      </div>
-    </div>
-
-    <div class="panel section-gap">
-      <h2>Data Classification &amp; Egress Policy Matrix</h2>
-      <table class="conflict-table">
-        <thead>
-          <tr>
-            <th>Local Data Store</th>
-            <th>Privacy Classification</th>
-            <th>External Egress Policy</th>
-            <th>Cloud-Hosted AI Policy</th>
-            <th>Local Records</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${Object.entries(DATA_CLASSIFICATION_POLICY).map(([key, pol]) => `
-            <tr>
-              <td><strong>${esc(key)}</strong><br><small class="muted">${esc(pol.description)}</small></td>
-              <td>
-                <span class="chip ${pol.tier === 'RESTRICTED_PERSONAL_SENSITIVE' ? 'private' : 'ok'}">${esc(pol.tier)}</span>
-              </td>
-              <td><span class="code-pill">${esc(pol.egress_policy)}</span></td>
-              <td><span class="chip bad">🚫 ${esc(pol.cloud_ai_policy)}</span></td>
-              <td><strong>${storeCounts[key] ?? 0}</strong> item(s)</td>
-            </tr>
-          `).join('')}
-        </tbody>
-      </table>
-    </div>
-
-    <div class="panel section-gap">
-      <h2>Local Privacy &amp; Egress Firewall Audit Log (${db.privacyAudit.length})</h2>
-      ${db.privacyAudit.map(ev => `
-        <div class="appointment">
-          <div>
-            <div class="chips" style="margin:0 0 6px">
-              <span class="chip ${ev.status === 'HARD_BLOCKED' ? 'bad' : 'ok'}">${esc(ev.status)}</span>
-              <span class="chip private">${esc(ev.classification)}</span>
-              <span class="code-pill">${esc(ev.api)}</span>
-            </div>
-            <strong>Target: ${esc(ev.target)}</strong>
-            <small>${esc(ev.timestamp)} · ${esc(ev.detail)}</small>
-          </div>
-        </div>
-      `).join('')}
-    </div>
-  `;
-}
+  return title().join('')}
 
 async function simulateBlockedCloudAIEgress() {
   const sensitiveSample = JSON.stringify({
@@ -2643,6 +2371,3 @@ function purgeRestrictedRecords() {
 
 // Initial render on load
 render();
-</script>
-</body>
-</html>
